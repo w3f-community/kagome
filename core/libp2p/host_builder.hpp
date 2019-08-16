@@ -35,7 +35,7 @@ namespace libp2p {
      * Create a host builder from the predefined config
      * @param config to used inside
      */
-    explicit HostBuilder(Config config);
+    explicit HostBuilder(Config &&config);
 
     /**
      * Set a long-term identity (keypair) of this Host
@@ -71,7 +71,7 @@ namespace libp2p {
      * @return builder with the adaptor set
      * @note if no repository is set, the default one will be used
      */
-    HostBuilder &setPeerRepository(detail::sptr<peer::PeerRepository> p);
+    HostBuilder &setPeerRepository(detail::uptr<peer::PeerRepository> p);
 
     /**
      * Add a transport to be supported by this Host; through transports nodes

@@ -21,5 +21,6 @@ addtest(host_builder_test
     host_builder_test.cpp
     )
 target_link_libraries(host_builder_test
+    host_builder
     libp2p
     )

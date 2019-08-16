@@ -29,6 +29,9 @@ namespace libp2p {
     template <typename T>
     using sptr = std::shared_ptr<T>;
 
+    template<typename T>
+    using uptr = std::unique_ptr<T>;
+
     template <typename T>
     using vecsptr = vec<sptr<T>>;
   }  // namespace detail
@@ -40,7 +43,7 @@ namespace libp2p {
     crypto::KeyPair peer_key;
     detail::sptr<crypto::random::CSPRNG> cprng;
     detail::sptr<crypto::random::RandomGenerator> prng;
-    detail::sptr<peer::PeerRepository> peer_repository;
+    detail::uptr<peer::PeerRepository> peer_repository;
     detail::vecsptr<transport::TransportAdaptor> transports;
     detail::vecsptr<muxer::MuxerAdaptor> muxers;
     detail::vecsptr<security::SecurityAdaptor> securities;
@@ -57,3 +60,4 @@ namespace libp2p {
 }  // namespace libp2p
 
 #endif  // KAGOME_CONFIG_HPP
+

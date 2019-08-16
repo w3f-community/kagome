@@ -4,19 +4,21 @@
  */
 
 #include "libp2p/host_builder.hpp"
-#include <libp2p/host/basic_host.hpp>
 
 #include "libp2p/crypto/key_generator/key_generator_impl.hpp"
 #include "libp2p/crypto/key_validator/key_validator_impl.hpp"
 #include "libp2p/crypto/random_generator/boost_generator.hpp"
+#include "libp2p/host/basic_host.hpp"
 #include "libp2p/muxer/yamux.hpp"
 #include "libp2p/network/default_network.hpp"
 #include "libp2p/peer/address_repository/inmem_address_repository.hpp"
+#include "libp2p/peer/impl/peer_repository_impl.hpp"
 #include "libp2p/peer/key_repository/inmem_key_repository.hpp"
 #include "libp2p/peer/protocol_repository/inmem_protocol_repository.hpp"
 #include "libp2p/security/plaintext.hpp"
 #include "libp2p/transport/impl/upgrader_impl.hpp"
 #include "libp2p/transport/tcp.hpp"
+
 // TODO(akvinikym) PRE-215 27.06.19: revert multiselect
 //#include "libp2p/protocol_muxer/multiselect.hpp"
 
@@ -39,7 +41,7 @@ namespace {
 namespace libp2p {
   using multi::Multiaddress;
 
-  HostBuilder::HostBuilder(Config config) : config_{std::move(config)} {}
+  HostBuilder::HostBuilder(Config &&config) : config_{std::move(config)} {}
 
   HostBuilder &HostBuilder::setKeypair(const crypto::KeyPair &kp) {
     config_.peer_key = kp;
@@ -58,7 +60,7 @@ namespace libp2p {
   }
 
   HostBuilder &HostBuilder::setPeerRepository(
-      detail::sptr<peer::PeerRepository> p) {
+      detail::uptr<peer::PeerRepository> p) {
     config_.peer_repository = std::move(p);
     return *this;
   }
@@ -108,10 +110,12 @@ namespace libp2p {
       config_.cprng = std::make_shared<crypto::random::BoostRandomGenerator>();
     }
 
-    crypto::KeyGeneratorImpl key_generator{*config_.cprng};
+    auto key_generator =
+        std::make_shared<crypto::KeyGeneratorImpl>(*config_.cprng);
 
     if (keypairIsWellFormed(config_.peer_key)) {
-      OUTCOME_TRY(keys, key_generator.generateKeys(crypto::Key::Type::RSA2048));
+      OUTCOME_TRY(keys,
+                  key_generator->generateKeys(crypto::Key::Type::RSA2048));
       config_.peer_key = std::move(keys);
     }
 
@@ -166,7 +170,7 @@ namespace libp2p {
     //
 
     if (!config_.peer_repository) {
-      config_.peer_repository = std::make_shared<peer::PeerRepository>(
+      config_.peer_repository = std::make_unique<peer::PeerRepositoryImpl>(
           std::make_shared<peer::InmemAddressRepository>(),
           std::make_shared<peer::InmemKeyRepository>(),
           std::make_shared<peer::InmemProtocolRepository>());

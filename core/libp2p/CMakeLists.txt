@@ -17,10 +17,17 @@ add_subdirectory(basic)
 add_subdirectory(host)
 
 add_library(host_builder
+    host_builder.hpp
     host_builder.cpp
     )
 target_link_libraries(host_builder
+    Boost::boost
+    libp2p_basic_host
     libp2p_default_network
+    libp2p_inmem_address_repository
+    libp2p_inmem_key_repository
+    libp2p_inmem_protocol_repository
+    libp2p_peer_repository
     )
 
 add_library(libp2p
