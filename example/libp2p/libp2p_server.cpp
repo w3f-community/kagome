@@ -13,7 +13,7 @@
 
 #include <chrono>
 
-using std::chrono_literals::operator""s; // for seconds
+using std::chrono_literals::operator""s;  // for seconds
 
 using MuxedConnectionConfig = libp2p::muxer::MuxedConnectionConfig;
 
@@ -29,7 +29,7 @@ int main() {
   // instances every time he needs it to resolve dependency
   auto injector = libp2p::injector::makeHostInjector(
       boost::di::bind<context_t>.to<context_t>().in(boost::di::singleton),
-      boost::di::bind<MuxedConnectionConfig>.to(MuxedConnectionConfig()).in(boost::di::singleton));
+      boost::di::bind<MuxedConnectionConfig>.to(MuxedConnectionConfig()));
 
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
   std::cout << "Server started" << std::endl;
@@ -50,6 +50,8 @@ int main() {
       });
 
   auto context = injector.create<std::shared_ptr<context_t>>();
+  std::cout << muxconfig.maximum_window_size << " " << muxconfig.maximum_streams
+            << std::endl;
 
   context->post([host{std::move(host)}] {
     auto ma =
@@ -62,5 +64,5 @@ int main() {
     host->start();
   });
 
-  context->run_for(2s); // run for 2 seconds
+  context->run_for(2s);  // run for 2 seconds
 }
