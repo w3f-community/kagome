@@ -50,9 +50,7 @@ int main() {
       });
 
   auto context = injector.create<std::shared_ptr<context_t>>();
-  std::cout << muxconfig.maximum_window_size << " " << muxconfig.maximum_streams
-            << std::endl;
-
+  
   context->post([host{std::move(host)}] {
     auto ma =
         libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40009").value();
