@@ -16,6 +16,13 @@ add_subdirectory(protocol)
 add_subdirectory(basic)
 add_subdirectory(host)
 
+add_library(host_builder
+    host_builder.cpp
+    )
+target_link_libraries(host_builder
+    libp2p_default_network
+    )
+
 add_library(libp2p
     libp2p.cpp
     )

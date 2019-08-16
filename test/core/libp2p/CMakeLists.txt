@@ -16,3 +16,10 @@ add_subdirectory(connection)
 add_subdirectory(protocol)
 add_subdirectory(basic)
 add_subdirectory(injector)
+
+addtest(host_builder_test
+    host_builder_test.cpp
+    )
+target_link_libraries(host_builder_test
+    libp2p
+    )
