@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <chrono>
 #include <iostream>
 
 #include "libp2p/host/host.hpp"
@@ -11,19 +12,26 @@
 #include "libp2p/security/plaintext.hpp"
 #include "libp2p/transport/tcp.hpp"
 
-#include <chrono>
-
 using std::chrono_literals::operator""s;  // for seconds
 
 using MuxedConnectionConfig = libp2p::muxer::MuxedConnectionConfig;
 
+namespace {
+  std::vector<uint8_t> operator"" _v(const char *c, size_t s) {
+    std::vector<uint8_t> chars(c, c + s);
+    return chars;
+  }
+
+  std::string make_string(const std::vector<uint8_t> &buffer, size_t count) {
+    auto begin = buffer.begin();
+    auto end = begin + count;
+    return std::string (begin, end);
+  }
+
+}  // namespace
+
 int main() {
   using context_t = boost::asio::io_context;
-  //  auto injector = libp2p::injector::makeHostInjector(
-  //      libp2p::injector::useSecurityAdaptors<libp2p::security::Plaintext>(),
-  //      libp2p::injector::useMuxerAdaptors<libp2p::muxer::Yamux>(),
-  //      libp2p::injector::useTransportAdaptors<
-  //          libp2p::transport::TcpTransport>());
 
   // make injector use the same io_context and same MuxedConnectionConfig
   // instances every time he needs it to resolve dependency
@@ -36,21 +44,33 @@ int main() {
   host->setProtocolHandler(
       "chat/1.0.0",
       [](const std::shared_ptr<libp2p::connection::Stream> &stream) {
-        auto rcvd_data_msg = std::make_shared<std::vector<uint8_t>>(100, 0);
+        auto read_buffer = std::make_shared<std::vector<uint8_t>>(100, 0);
         stream->readSome(
-            *rcvd_data_msg,
-            rcvd_data_msg->size(),
-            [rcvd_data_msg](outcome::result<size_t> read_bytes) {
+            *read_buffer,
+            read_buffer->size(),
+            [read_buffer, stream](outcome::result<size_t> read_bytes) mutable {
               if (read_bytes) {
-                std::string s(reinterpret_cast<char const *>(  // NOLINT
-                    rcvd_data_msg->data()));
+                auto s = make_string(*read_buffer, read_bytes.value());
                 std::cout << "Server read: " << s << std::endl;
+                auto write_buffer = std::make_shared<std::vector<uint8_t>>();
+                *write_buffer = "hello there"_v;
+
+                stream->write(
+                    *write_buffer,
+                    write_buffer->size(),
+                    [write_buffer](
+                        outcome::result<size_t> written_bytes) mutable {
+                      if (written_bytes) {
+                        std::cout << written_bytes.value() << " sent"
+                                  << std::endl;
+                      }
+                    });
               }
             });
       });
 
   auto context = injector.create<std::shared_ptr<context_t>>();
-  
+
   context->post([host{std::move(host)}] {
     auto ma =
         libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40009").value();
