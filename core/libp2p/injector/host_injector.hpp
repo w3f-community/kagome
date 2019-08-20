@@ -21,12 +21,17 @@ namespace libp2p::injector {
   template <typename... Ts>
   auto makeHostInjector(Ts &&... args) {
     using namespace boost;  // NOLINT
+    using context_t = boost::asio::io_context;
 
     // clang-format off
     return di::make_injector(
         makeNetworkInjector(),
 
         di::bind<Host>.template to<host::BasicHost>(),
+
+        di::bind<context_t>.to<context_t>().in(boost::di::singleton),
+
+        di::bind<muxer::MuxedConnectionConfig>.to(muxer::MuxedConnectionConfig()),
 
         // repositories
         di::bind<peer::PeerRepository>.template to<peer::PeerRepositoryImpl>(),
