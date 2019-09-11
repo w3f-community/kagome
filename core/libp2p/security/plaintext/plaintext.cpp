@@ -97,7 +97,7 @@ namespace libp2p::security {
   }
 
   void Plaintext::readCallback(
-      std::shared_ptr<connection::RawConnection> conn,
+      std::shared_ptr<connection::RawConnection> conn,  // NOLINT
       const MaybePeerId& p,
       const SecConnCallbackFunc &cb,
       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,

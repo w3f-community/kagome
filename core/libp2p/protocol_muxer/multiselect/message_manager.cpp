@@ -8,7 +8,6 @@
 #include <string_view>
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/format.hpp>
 #include "common/hexutil.hpp"
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::protocol_muxer, MessageManager::ParseError,
@@ -32,8 +31,7 @@ namespace {
       libp2p::protocol_muxer::MessageManager::MultiselectMessage;
 
   /// header of Multiselect protocol
-  constexpr std::string_view kMultiselectHeaderString =
-      "/multistream-select/1.0.0\n";
+  constexpr std::string_view kMultiselectHeaderString = "/multistream/1.0.0\n";
 
   /// string of ls message
   constexpr std::string_view kLsString = "ls\n";
