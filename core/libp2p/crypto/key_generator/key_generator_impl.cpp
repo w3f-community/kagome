@@ -13,6 +13,7 @@
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
+#include <boost/assert.hpp>
 #include <gsl/pointers>
 #include "libp2p/crypto/error.hpp"
 #include "libp2p/crypto/random_generator.hpp"
@@ -216,15 +217,11 @@ namespace libp2p::crypto {
   outcome::result<KeyPair> KeyGeneratorImpl::generateKeys(
       Key::Type key_type) const {
     switch (key_type) {
-      case Key::Type::RSA1024:
-        return generateRsa(common::RSAKeyType::RSA1024);
-      case Key::Type::RSA2048:
-        return generateRsa(common::RSAKeyType::RSA2048);
-      case Key::Type::RSA4096:
-        return generateRsa(common::RSAKeyType::RSA4096);
-      case Key::Type::ED25519:
+      case Key::Type::RSA:
+        BOOST_ASSERT_MSG(false, "not implemented");
+      case Key::Type::Ed25519:
         return generateEd25519();
-      case Key::Type::SECP256K1:
+      case Key::Type::Secp256k1:
         return generateSecp256k1();
       default:
         return KeyGeneratorError::UNSUPPORTED_KEY_TYPE;
@@ -235,20 +232,21 @@ namespace libp2p::crypto {
       common::RSAKeyType bits_option) const {
     int bits = 0;
     Key::Type key_type;
-    switch (bits_option) {
-      case common::RSAKeyType::RSA1024:
-        bits = 1024;
-        key_type = Key::Type::RSA1024;
-        break;
-      case common::RSAKeyType::RSA2048:
-        bits = 2048;
-        key_type = Key::Type::RSA2048;
-        break;
-      case common::RSAKeyType::RSA4096:
-        bits = 4096;
-        key_type = Key::Type::RSA4096;
-        break;
-    }
+    BOOST_ASSERT_MSG(false, "not implemented");
+    //    switch (bits_option) {
+    //      case common::RSAKeyType::RSA1024:
+    //        bits = 1024;
+    //        key_type = Key::Type::RSA1024;
+    //        break;
+    //      case common::RSAKeyType::RSA2048:
+    //        bits = 2048;
+    //        key_type = Key::Type::RSA2048;
+    //        break;
+    //      case common::RSAKeyType::RSA4096:
+    //        bits = 4096;
+    //        key_type = Key::Type::RSA4096;
+    //        break;
+    //    }
 
     // normally unreachable
     if (0 == bits) {
@@ -289,8 +287,8 @@ namespace libp2p::crypto {
     OUTCOME_TRY(public_key_bytes,
                 detail::getEvpPkeyRawBytes(pkey, EVP_PKEY_get_raw_public_key));
 
-    return KeyPair{{{Key::Type::ED25519, std::move(public_key_bytes)}},
-                   {{Key::Type::ED25519, std::move(private_key_bytes)}}};
+    return KeyPair{{{Key::Type::Ed25519, std::move(public_key_bytes)}},
+                   {{Key::Type::Ed25519, std::move(private_key_bytes)}}};
   }
 
   outcome::result<KeyPair> KeyGeneratorImpl::generateSecp256k1() const {
@@ -348,20 +346,18 @@ namespace libp2p::crypto {
       return KeyGeneratorError::KEY_GENERATION_FAILED;
     }
 
-    return KeyPair{{{Key::Type::SECP256K1, std::move(public_bytes)}},
-                   {{Key::Type::SECP256K1, std::move(private_bytes)}}};
+    return KeyPair{{{Key::Type::Secp256k1, std::move(public_bytes)}},
+                   {{Key::Type::Secp256k1, std::move(private_bytes)}}};
   }
 
   outcome::result<PublicKey> KeyGeneratorImpl::derivePublicKey(
       const PrivateKey &private_key) const {
     switch (private_key.type) {
-      case Key::Type::RSA1024:
-      case Key::Type::RSA2048:
-      case Key::Type::RSA4096:
+      case Key::Type::RSA:
         return detail::deriveRsa(private_key);
-      case Key::Type::ED25519:
+      case Key::Type::Ed25519:
         return detail::deriveEd25519(private_key);
-      case Key::Type::SECP256K1:
+      case Key::Type::Secp256k1:
         return detail::deriveSecp256k1(private_key);
       case Key::Type::UNSPECIFIED:
         return KeyGeneratorError::WRONG_KEY_TYPE;

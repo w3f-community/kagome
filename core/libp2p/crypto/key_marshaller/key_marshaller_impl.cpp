@@ -19,17 +19,15 @@ namespace libp2p::crypto::marshaller {
     outcome::result<protobuf::KeyType> marshalKeyType(Key::Type key_type) {
       switch (key_type) {
         case Key::Type::UNSPECIFIED:
-          return protobuf::KeyType::UNSPECIFIED;
-        case Key::Type::RSA1024:
-          return protobuf::KeyType::RSA1024;
-        case Key::Type::RSA2048:
-          return protobuf::KeyType::RSA2048;
-        case Key::Type::RSA4096:
-          return protobuf::KeyType::RSA4096;
-        case Key::Type::ED25519:
-          return protobuf::KeyType::ED25519;
-        case Key::Type::SECP256K1:
-          return protobuf::KeyType::SECP256K1;
+          assert(false);
+        case Key::Type::RSA:
+          return protobuf::KeyType::RSA;
+        case Key::Type::Ed25519:
+          return protobuf::KeyType::Ed25519;
+        case Key::Type::Secp256k1:
+          return protobuf::KeyType::Secp256k1;
+        case Key::Type::ECDSA:
+          return protobuf::KeyType::ECDSA;
       }
 
       return CryptoProviderError::UNKNOWN_KEY_TYPE;
@@ -42,18 +40,14 @@ namespace libp2p::crypto::marshaller {
      */
     outcome::result<Key::Type> unmarshalKeyType(protobuf::KeyType key_type) {
       switch (key_type) {
-        case protobuf::KeyType::UNSPECIFIED:
-          return Key::Type::UNSPECIFIED;
-        case protobuf::KeyType::RSA1024:
-          return Key::Type::RSA1024;
-        case protobuf::KeyType::RSA2048:
-          return Key::Type::RSA2048;
-        case protobuf::KeyType::RSA4096:
-          return Key::Type::RSA4096;
-        case protobuf::KeyType::ED25519:
-          return Key::Type::ED25519;
-        case protobuf::KeyType::SECP256K1:
-          return Key::Type::SECP256K1;
+        case protobuf::KeyType::RSA:
+          return Key::Type::RSA;
+        case protobuf::KeyType::Ed25519:
+          return Key::Type::Ed25519;
+        case protobuf::KeyType::Secp256k1:
+          return Key::Type::Secp256k1;
+        case protobuf::KeyType::ECDSA:
+          return Key::Type::ECDSA;
         default:
           return CryptoProviderError::UNKNOWN_KEY_TYPE;
       }
@@ -68,8 +62,8 @@ namespace libp2p::crypto::marshaller {
       const PublicKey &key) const {
     protobuf::PublicKey protobuf_key;
     OUTCOME_TRY(key_type, marshalKeyType(key.type));
-    protobuf_key.set_key_type(key_type);
-    protobuf_key.set_key_value(key.data.data(), key.data.size());
+    protobuf_key.set_type(key_type);
+    protobuf_key.set_data(key.data.data(), key.data.size());
 
     auto string = protobuf_key.SerializeAsString();
     KeyMarshallerImpl::ByteArray out(string.begin(), string.end());
@@ -81,8 +75,8 @@ namespace libp2p::crypto::marshaller {
     // TODO(Harrm): Check if it's a typo
     protobuf::PrivateKey protobuf_key;
     OUTCOME_TRY(key_type, marshalKeyType(key.type));
-    protobuf_key.set_key_type(key_type);
-    protobuf_key.set_key_value(key.data.data(), key.data.size());
+    protobuf_key.set_type(key_type);
+    protobuf_key.set_data(key.data.data(), key.data.size());
 
     auto string = protobuf_key.SerializeAsString();
     return KeyMarshallerImpl::ByteArray(string.begin(), string.end());
@@ -95,9 +89,9 @@ namespace libp2p::crypto::marshaller {
       return CryptoProviderError::FAILED_UNMARSHAL_DATA;
     }
 
-    OUTCOME_TRY(key_type, unmarshalKeyType(protobuf_key.key_type()));
-    KeyMarshallerImpl::ByteArray key_value(protobuf_key.key_value().begin(),
-                                           protobuf_key.key_value().end());
+    OUTCOME_TRY(key_type, unmarshalKeyType(protobuf_key.type()));
+    KeyMarshallerImpl::ByteArray key_value(protobuf_key.data().begin(),
+                                           protobuf_key.data().end());
     auto key = PublicKey{{key_type, key_value}};
     OUTCOME_TRY(key_validator_->validate(key));
 
@@ -111,9 +105,9 @@ namespace libp2p::crypto::marshaller {
       return CryptoProviderError::FAILED_UNMARSHAL_DATA;
     }
 
-    OUTCOME_TRY(key_type, unmarshalKeyType(protobuf_key.key_type()));
-    KeyMarshallerImpl::ByteArray key_value(protobuf_key.key_value().begin(),
-                                           protobuf_key.key_value().end());
+    OUTCOME_TRY(key_type, unmarshalKeyType(protobuf_key.type()));
+    KeyMarshallerImpl::ByteArray key_value(protobuf_key.data().begin(),
+                                           protobuf_key.data().end());
     auto key = PrivateKey{{key_type, key_value}};
     OUTCOME_TRY(key_validator_->validate(key));
 

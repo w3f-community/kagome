@@ -13,12 +13,13 @@ namespace libp2p::crypto::validator {
   namespace {
     constexpr int getRsaBitsCount(Key::Type key_type) {
       switch (key_type) {
-        case Key::Type::RSA1024:
-          return 1024;
-        case Key::Type::RSA2048:
-          return 2048;
-        case Key::Type::RSA4096:
-          return 4096;
+        //        case Key::Type::RSA1024:
+        //          return 1024;
+        //        case Key::Type::RSA2048:
+        //          return 2048;
+        //        case Key::Type::RSA4096:
+        //          return 4096;
+        BOOST_ASSERT_MSG(false, "not imple,ented");
         default:
           return 0;
       }
@@ -46,13 +47,11 @@ namespace libp2p::crypto::validator {
   outcome::result<void> KeyValidatorImpl::validate(
       const PrivateKey &key) const {
     switch (key.type) {
-      case Key::Type::RSA1024:
-      case Key::Type::RSA2048:
-      case Key::Type::RSA4096:
+      case Key::Type::RSA:
         return validateRsa(key);
-      case Key::Type::ED25519:
+      case Key::Type::Ed25519:
         return validateEd25519(key);
-      case Key::Type::SECP256K1:
+      case Key::Type::Secp256k1:
         return validateSecp256k1(key);
       case Key::Type::UNSPECIFIED:  // consider unspecified key valid
         break;
@@ -63,13 +62,11 @@ namespace libp2p::crypto::validator {
 
   outcome::result<void> KeyValidatorImpl::validate(const PublicKey &key) const {
     switch (key.type) {
-      case Key::Type::RSA1024:
-      case Key::Type::RSA2048:
-      case Key::Type::RSA4096:
+      case Key::Type::RSA:
         return validateRsa(key);
-      case Key::Type::ED25519:
+      case Key::Type::Ed25519:
         return validateEd25519(key);
-      case Key::Type::SECP256K1:
+      case Key::Type::Secp256k1:
         return validateSecp256k1(key);
       case Key::Type::UNSPECIFIED:  // consider unspecified key valid
         break;
