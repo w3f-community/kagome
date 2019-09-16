@@ -31,7 +31,7 @@ namespace kagome::consensus::grandpa {
      * block hash, even if that block is {@param base} itself. If base is
      * unknown, return None.
      */
-    virtual boost::optional<BlockInfo> bestChainContaining(
+    virtual outcome::result<BlockInfo> bestChainContaining(
         primitives::BlockHash base) = 0;
 
     /**

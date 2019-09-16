@@ -5,7 +5,6 @@
 
 #include "libp2p/security/plaintext/exchange_message_marshaller_impl.hpp"
 
-#include <iostream>
 #include "libp2p/security/plaintext/protobuf/plaintext.pb.h"
 
 OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::plaintext,
@@ -47,7 +46,6 @@ namespace libp2p::security::plaintext {
     if (!exchange_msg.SerializeToArray(out_msg.data(), out_msg.size())) {
       return Error::MESSAGE_SERIALIZING_ERROR;
     }
-    std::cerr << exchange_msg.DebugString() << std::endl;
     exchange_msg.release_pubkey();
     return out_msg;
   }

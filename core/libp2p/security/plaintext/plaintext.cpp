@@ -58,6 +58,11 @@ namespace libp2p::security {
 
   void Plaintext::secureOutbound(
       std::shared_ptr<connection::RawConnection> outbound,
+      const peer::PeerId& p,
+      SecConnCallbackFunc cb) {
+    sendExchangeMsg(outbound, cb);
+    receiveExchangeMsg(outbound, p, cb);
+  }
       const peer::PeerId &p,
       SecConnCallbackFunc cb) {
     sendExchangeMsg(outbound, cb);
@@ -84,6 +89,24 @@ namespace libp2p::security {
     auto b1 = (uint8_t)(len >> 8);
     auto b0 = (uint8_t)(len >> 0);
 
+  void Plaintext::sendExchangeMsg(
+      const std::shared_ptr<connection::RawConnection>& conn,
+      SecConnCallbackFunc cb) const {
+    PLAINTEXT_OUTCOME_TRY(out_msg,
+                          marshaller_->marshal(plaintext::ExchangeMessage{
+                              .pubkey = idmgr_->getKeyPair().publicKey,
+                              .peer_id = idmgr_->getId()}),
+                          conn,
+                          cb);
+    conn->write(out_msg.value(),
+                out_msg.value().size(),
+                [cb{std::move(cb)}, conn](auto &&res) {
+                  if (res.has_error()) {
+                    conn->close();
+                    cb(Error::EXCHANGE_SEND_ERROR);
+                  }
+                });
+  }
     conn->write(std::vector<uint8_t>{b3, b2, b1, b0},
                 4,
                 [out_msg, conn, cb{std::move(cb)}](auto &&res) {
@@ -92,6 +115,18 @@ namespace libp2p::security {
                     cb(Error::EXCHANGE_SEND_ERROR);
                   }
 
+  void Plaintext::receiveExchangeMsg(
+      const std::shared_ptr<connection::RawConnection> &conn,
+      const MaybePeerId& p,
+      SecConnCallbackFunc cb) const {
+    constexpr size_t kMaxMsgSize = 10000;
+    auto read_bytes = std::make_shared<std::vector<uint8_t>>(kMaxMsgSize);
+    conn->readSome(
+        *read_bytes,
+        kMaxMsgSize,
+        [self{shared_from_this()}, conn, p, cb{std::move(cb)}, read_bytes](
+            auto &&r) { self->readCallback(conn, p, cb, read_bytes,r); });
+  }
                   conn->write(out_msg, out_msg.size(), [cb, conn](auto &&res) {
                     if (res.has_error()) {
                       conn->close();
@@ -135,7 +170,32 @@ namespace libp2p::security {
     //        read_bytes](
     //            auto &&r) { self->readCallback(conn, p, cb, read_bytes,r); });
   }
+  void Plaintext::readCallback(
+      std::shared_ptr<connection::RawConnection> conn,
+      const MaybePeerId& p,
+      const SecConnCallbackFunc &cb,
+      const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
+      outcome::result<size_t> read_call_res) const {
+    PLAINTEXT_OUTCOME_TRY(r, read_call_res, conn, cb);
+    PLAINTEXT_OUTCOME_TRY(
+        in_exchange_msg, marshaller_->unmarshal(*read_bytes), conn, cb);
+    auto received_pid = in_exchange_msg.value().peer_id;
+    auto pkey = in_exchange_msg.value().pubkey;
+    auto derived_pid = peer::PeerId::fromPublicKey(pkey);
+    if (received_pid != derived_pid) {
+      conn->close();
+      cb(Error::INVALID_PEER_ID);
+    }
+    if (p.has_value()) {
+      if (received_pid != p.value()) {
+        conn->close();
+        cb(Error::INVALID_PEER_ID);
+      }
+    }
 
+    cb(std::make_shared<connection::PlaintextConnection>(
+        std::move(conn), idmgr_->getKeyPair().publicKey, std::move(pkey)));
+  }
   void Plaintext::readCallback(
       std::shared_ptr<connection::RawConnection> conn,  // NOLINT
       const MaybePeerId &p,
