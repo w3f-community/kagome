@@ -4,6 +4,8 @@
  */
 
 #include "libp2p/host/basic_host/basic_host.hpp"
+#include <iostream>
+#include "common/hexutil.hpp"
 
 namespace libp2p::host {
 
@@ -99,6 +101,15 @@ namespace libp2p::host {
   }
 
   void BasicHost::start() {
+    std::cout << "Public key: ";
+    auto pk = idmgr_->getKeyPair().publicKey;
+    for(int i: pk.data) {
+      std::cout << i << " ";
+    }
+    std::cout << "\n";
+
+    std::cout << "derived peer id " << peer::PeerId::fromPublicKey(pk).toHex() << "\n";
+    std::cout << "derived peer id base58 " << peer::PeerId::fromPublicKey(pk).toBase58() << "\n";
     network_->getListener().start();
   }
 
