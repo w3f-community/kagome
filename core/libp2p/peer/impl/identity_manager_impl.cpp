@@ -4,6 +4,7 @@
  */
 
 #include "libp2p/peer/impl/identity_manager_impl.hpp"
+#include "libp2p/crypto/key_marshaller.hpp"
 
 namespace libp2p::peer {
 
@@ -17,13 +18,17 @@ namespace libp2p::peer {
     return *keyPair_;
   }
 
-  IdentityManagerImpl::IdentityManagerImpl(crypto::KeyPair keyPair) {
+  IdentityManagerImpl::IdentityManagerImpl(
+      crypto::KeyPair keyPair,
+      std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller) {
     BOOST_ASSERT(!keyPair.publicKey.data.empty());
+    BOOST_ASSERT(marshaller);
 
     keyPair_ = std::make_unique<crypto::KeyPair>(std::move(keyPair));
 
     // it is ok to use .value()
-    auto id = peer::PeerId::fromPublicKey(keyPair_->publicKey);
+    auto id = peer::PeerId::fromPublicKey(
+        marshaller->marshal(keyPair_->publicKey).value());
     id_ = std::make_unique<peer::PeerId>(std::move(id));
   }
 }  // namespace libp2p::peer

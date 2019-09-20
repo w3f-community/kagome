@@ -12,6 +12,10 @@
 #include "libp2p/security/plaintext/exchange_message.hpp"
 #include "libp2p/security/plaintext/exchange_message_marshaller.hpp"
 
+namespace libp2p::crypto::protobuf {
+  class PublicKey;
+}
+
 namespace libp2p::security::plaintext {
 
   class ExchangeMessageMarshallerImpl : public ExchangeMessageMarshaller {
@@ -22,7 +26,7 @@ namespace libp2p::security::plaintext {
     enum class Error {
       PUBLIC_KEY_SERIALIZING_ERROR = 1,
       MESSAGE_SERIALIZING_ERROR
-      };
+    };
 
     explicit ExchangeMessageMarshallerImpl(
         std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller);
@@ -34,7 +38,11 @@ namespace libp2p::security::plaintext {
         gsl::span<const uint8_t> msg_bytes) const override;
 
    private:
-    std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;
+    outcome::result<std::unique_ptr<crypto::protobuf::PublicKey>>
+    allocatePubKey(
+        crypto::PublicKey pubkey) const;
+
+      std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;
   };
 
 }  // namespace libp2p::security::plaintext

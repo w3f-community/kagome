@@ -33,7 +33,7 @@ namespace libp2p::peer {
      * @param key, from which PeerId is to be created
      * @return instance of PeerId
      */
-    static PeerId fromPublicKey(const crypto::PublicKey &key);
+    static PeerId fromPublicKey(const std::vector<uint8_t> &key_data);
 
     /**
      * Create a PeerId from the byte array (serialized multihash).
@@ -83,6 +83,7 @@ namespace libp2p::peer {
     bool operator!=(const PeerId &other) const;
 
    private:
+    static constexpr size_t kMaxInlineKeyLength = 42;
     /**
      * Create an instance of PeerId
      * @param hash, with which PeerId is to be created

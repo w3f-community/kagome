@@ -7,6 +7,7 @@
 #define KAGOME_IDENTITY_MANAGER_IMPL_HPP
 
 #include "libp2p/crypto/key_generator.hpp"
+#include "libp2p/crypto/key_marshaller.hpp"
 #include "libp2p/peer/identity_manager.hpp"
 #include "libp2p/peer/key_repository.hpp"
 
@@ -15,7 +16,9 @@ namespace libp2p::peer {
    public:
     ~IdentityManagerImpl() override = default;
 
-    explicit IdentityManagerImpl(crypto::KeyPair keyPair);
+    explicit IdentityManagerImpl(
+        crypto::KeyPair keyPair,
+        std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller);
 
     const peer::PeerId &getId() const override;
 

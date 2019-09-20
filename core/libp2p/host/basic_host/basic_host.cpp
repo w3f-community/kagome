@@ -108,8 +108,8 @@ namespace libp2p::host {
     }
     std::cout << "\n";
 
-    std::cout << "derived peer id " << peer::PeerId::fromPublicKey(pk).toHex() << "\n";
-    std::cout << "derived peer id base58 " << peer::PeerId::fromPublicKey(pk).toBase58() << "\n";
+    std::cout << "derived peer id " << peer::PeerId::fromPublicKey(pk.data).toHex() << "\n";
+    std::cout << "derived peer id base58 " << peer::PeerId::fromPublicKey(pk.data).toBase58() << "\n";
     network_->getListener().start();
   }
 

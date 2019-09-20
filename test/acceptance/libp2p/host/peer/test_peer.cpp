@@ -21,7 +21,7 @@ Peer::Peer(Peer::Duration timeout)
           std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_)} {
   EXPECT_OUTCOME_TRUE_MSG(
       keys,
-      key_generator_->generateKeys(crypto::Key::Type::ED25519),
+      key_generator_->generateKeys(crypto::Key::Type::Ed25519),
       "failed to generate keys");
 
   host_ = makeHost(std::move(keys));
@@ -91,12 +91,6 @@ void Peer::wait() {
 }
 
 Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
-  auto idmgr = std::make_shared<peer::IdentityManagerImpl>(keyPair);
-
-  auto multiselect = std::make_shared<protocol_muxer::Multiselect>();
-
-  auto router = std::make_shared<network::RouterImpl>();
-
   auto key_generator =
       std::make_shared<crypto::KeyGeneratorImpl>(*random_provider_);
 
@@ -105,6 +99,12 @@ Peer::sptr<host::BasicHost> Peer::makeHost(crypto::KeyPair keyPair) {
 
   auto key_marshaller = std::make_shared<crypto::marshaller::KeyMarshallerImpl>(
       std::move(key_validator));
+
+  auto idmgr = std::make_shared<peer::IdentityManagerImpl>(keyPair, key_marshaller);
+
+  auto multiselect = std::make_shared<protocol_muxer::Multiselect>();
+
+  auto router = std::make_shared<network::RouterImpl>();
 
   auto exchange_msg_marshaller =
       std::make_shared<security::plaintext::ExchangeMessageMarshallerImpl>(

@@ -67,8 +67,6 @@ namespace libp2p::security {
   void Plaintext::sendExchangeMsg(
       const std::shared_ptr<connection::RawConnection> &conn,
       SecConnCallbackFunc cb) const {
-    auto public_key = idmgr_->getId().toBase58();
-
     PLAINTEXT_OUTCOME_TRY(out_msg_res,
                           marshaller_->marshal(plaintext::ExchangeMessage{
                               .pubkey = idmgr_->getKeyPair().publicKey,
@@ -79,18 +77,17 @@ namespace libp2p::security {
     auto out_msg = out_msg_res.value();
     auto len = out_msg.size();
 
-    auto b3 = (uint8_t)(len >> 24);
-    auto b2 = (uint8_t)(len >> 16);
-    auto b1 = (uint8_t)(len >> 8);
-    auto b0 = (uint8_t)(len >> 0);
+    std::vector<uint8_t> len_bytes = {static_cast<uint8_t>(len >> 24u),
+                                      static_cast<uint8_t>(len >> 16u),
+                                      static_cast<uint8_t>(len >> 8u),
+                                      static_cast<uint8_t>(len)};
 
-    conn->write(std::vector<uint8_t>{b3, b2, b1, b0},
-                4,
-                [out_msg, conn, cb{std::move(cb)}](auto &&res) {
+    conn->write(len_bytes, 4, [out_msg, conn, cb{std::move(cb)}](auto &&res) {
       if (res.has_error()) {
         conn->close();
         cb(Error::EXCHANGE_SEND_ERROR);
       }
+
       conn->write(
           out_msg, out_msg.size(), [cb{std::move(cb)}, conn](auto &&res) {
             if (res.has_error()) {
@@ -98,43 +95,40 @@ namespace libp2p::security {
               cb(Error::EXCHANGE_SEND_ERROR);
             }
           });
-      });
-  }
-
-  uint32_t deserialize_uint32(gsl::span<uint8_t> buf) {
-      uint32_t *x = (uint32_t *)buf.data();  // NOLINT
-      return *x;                             // NOLINT
+    });
   }
 
   void Plaintext::receiveExchangeMsg(
       const std::shared_ptr<connection::RawConnection> &conn,
       const MaybePeerId &p,
       SecConnCallbackFunc cb) const {
-      constexpr size_t kMaxMsgSize = 4;  // we read uint32_t first
-      auto read_bytes = std::make_shared<std::vector<uint8_t>>(kMaxMsgSize);
+    constexpr size_t kMaxMsgSize = 4;  // we read uint32_t first
+    auto read_bytes = std::make_shared<std::vector<uint8_t>>(kMaxMsgSize);
 
-      conn->readSome(
-          *read_bytes,
-          kMaxMsgSize,
-          [self{shared_from_this()}, conn, p, cb{std::move(cb)}, read_bytes](
-              auto &&r) {
-            auto bytes_size = deserialize_uint32(*read_bytes);
+    conn->readSome(
+        *read_bytes,
+        kMaxMsgSize,
+        [self{shared_from_this()}, conn, p, cb{std::move(cb)}, read_bytes](
+            auto &&r) {
+          auto bytes_size =
+              (static_cast<uint32_t>(read_bytes->at(0)) << 24u) +
+                  (static_cast<uint32_t>(read_bytes->at(1)) << 16u) +
+                      (static_cast<uint32_t>(read_bytes->at(2)) << 8u) +
+              read_bytes->at(3);
 
-            auto received_bytes = std::make_shared<std::vector<uint8_t>>(10000);
-            conn->readSome(*received_bytes,
-                           received_bytes->size(),
-                           [self, conn, p, cb, received_bytes](auto &&r) {
-                             self->readCallback(conn, p, cb, received_bytes, r);
-                           });
-          });
+          auto received_bytes = std::make_shared<std::vector<uint8_t>>(10000);
+          conn->readSome(*received_bytes,
+                         received_bytes->size(),
+                         [self, conn, p, cb, received_bytes](auto &&r) {
+                           self->readCallback(conn, p, cb, received_bytes, r);
+                         });
+        });
 
-      //    conn->readSome(
-      //        *read_bytes,
-      //        kMaxMsgSize,
-      //        [self{shared_from_this()}, conn, p, cb{std::move(cb)},
-      //        read_bytes](
-      //            auto &&r) { self->readCallback(conn, p, cb, read_bytes,r);
-      //            });
+    conn->readSome(
+        *read_bytes,
+        kMaxMsgSize,
+        [self{shared_from_this()}, conn, p, cb{std::move(cb)}, read_bytes](
+            auto &&r) { self->readCallback(conn, p, cb, read_bytes, r); });
   }
   void Plaintext::readCallback(
       std::shared_ptr<connection::RawConnection> conn,  // NOLINT
@@ -142,25 +136,25 @@ namespace libp2p::security {
       const SecConnCallbackFunc &cb,
       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
       outcome::result<size_t> read_call_res) const {
-      PLAINTEXT_OUTCOME_TRY(r, read_call_res, conn, cb);
-      PLAINTEXT_OUTCOME_TRY(
-          in_exchange_msg, marshaller_->unmarshal(*read_bytes), conn, cb);
-      auto received_pid = in_exchange_msg.value().peer_id;
-      auto pkey = in_exchange_msg.value().pubkey;
-      auto derived_pid = peer::PeerId::fromPublicKey(pkey);
-      if (received_pid != derived_pid) {
+    PLAINTEXT_OUTCOME_TRY(r, read_call_res, conn, cb);
+    PLAINTEXT_OUTCOME_TRY(
+        in_exchange_msg, marshaller_->unmarshal(*read_bytes), conn, cb);
+    auto received_pid = in_exchange_msg.value().peer_id;
+    auto pkey = in_exchange_msg.value().pubkey;
+    auto derived_pid = peer::PeerId::fromPublicKey(pkey.data);
+    if (received_pid != derived_pid) {
+      conn->close();
+      cb(Error::INVALID_PEER_ID);
+    }
+    if (p.has_value()) {
+      if (received_pid != p.value()) {
         conn->close();
         cb(Error::INVALID_PEER_ID);
       }
-      if (p.has_value()) {
-        if (received_pid != p.value()) {
-          conn->close();
-          cb(Error::INVALID_PEER_ID);
-        }
-      }
+    }
 
-      cb(std::make_shared<connection::PlaintextConnection>(
-          std::move(conn), idmgr_->getKeyPair().publicKey, std::move(pkey)));
+    cb(std::make_shared<connection::PlaintextConnection>(
+        std::move(conn), idmgr_->getKeyPair().publicKey, std::move(pkey)));
   }
 
-  }  // namespace libp2p::security
+}  // namespace libp2p::security

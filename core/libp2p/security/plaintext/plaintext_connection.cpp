@@ -15,11 +15,11 @@ namespace libp2p::connection {
         remote_(std::move(remotePubkey)) {}
 
   outcome::result<peer::PeerId> PlaintextConnection::localPeer() const {
-    return peer::PeerId::fromPublicKey(local_);
+    return peer::PeerId::fromPublicKey(local_.data);
   }
 
   outcome::result<peer::PeerId> PlaintextConnection::remotePeer() const {
-    return peer::PeerId::fromPublicKey(remote_);
+    return peer::PeerId::fromPublicKey(remote_.data);
   }
 
   outcome::result<crypto::PublicKey> PlaintextConnection::remotePublicKey()

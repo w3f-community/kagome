@@ -8,6 +8,10 @@ addtest(peer_id_test
     )
 target_link_libraries(peer_id_test
     libp2p_peer_id
+    key_generator
+    key_marshaller
+    random_generator
+    key_validator
     )
 
 addtest(peer_address_test
