@@ -110,11 +110,9 @@ auto makeTestCases() {
   // clang-format off
   return std::vector<KeyCase<T>>{
       {{T{{Key::Type::UNSPECIFIED, randomBuffer(16)}}}, {18, 16}},
-      {{T{{Key::Type::RSA1024,     randomBuffer(16)}}}, {8, 1, 18, 16}},
-      {{T{{Key::Type::RSA2048,     randomBuffer(16)}}}, {8, 2, 18, 16}},
-      {{T{{Key::Type::RSA4096,     randomBuffer(16)}}}, {8, 3, 18, 16}},
-      {{T{{Key::Type::ED25519,     randomBuffer(16)}}}, {8, 4, 18, 16}},
-      {{T{{Key::Type::SECP256K1,   randomBuffer(16)}}}, {8, 5, 18, 16}},
+      {{T{{Key::Type::RSA,     randomBuffer(16)}}}, {8, 1, 18, 16}},
+      {{T{{Key::Type::Ed25519,     randomBuffer(16)}}}, {8, 4, 18, 16}},
+      {{T{{Key::Type::Secp256k1,   randomBuffer(16)}}}, {8, 5, 18, 16}},
   };
   // clang-format on
 }

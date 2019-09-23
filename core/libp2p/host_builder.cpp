@@ -115,7 +115,7 @@ namespace libp2p {
 
     if (keypairIsWellFormed(config_.peer_key)) {
       OUTCOME_TRY(keys,
-                  key_generator->generateKeys(crypto::Key::Type::RSA2048));
+                  key_generator->generateKeys(crypto::Key::Type::RSA));
       config_.peer_key = std::move(keys);
     }
 
@@ -165,7 +165,7 @@ namespace libp2p {
 
     auto protocol_repo = std::make_shared<peer::InmemProtocolRepository>();
 
-    auto peer_id = peer::PeerId::fromPublicKey(config_.peer_key.publicKey);
+    auto peer_id = peer::PeerId::fromPublicKey(config_.peer_key.publicKey.data);
 
     //
 

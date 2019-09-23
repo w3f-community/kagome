@@ -23,8 +23,8 @@ using testing::Return;
 
 class PlaintextConnectionTest : public testing::Test {
  public:
-  PublicKey local{{Key::Type::SECP256K1, {1}}};
-  PublicKey remote{{Key::Type::ED25519, {2}}};
+  PublicKey local{{Key::Type::Secp256k1, {1}}};
+  PublicKey remote{{Key::Type::Ed25519, {2}}};
 
   std::shared_ptr<RawConnectionMock> connection_ =
       std::make_shared<RawConnectionMock>();
@@ -41,7 +41,8 @@ class PlaintextConnectionTest : public testing::Test {
  * @then method behaves as expected
  */
 TEST_F(PlaintextConnectionTest, LocalPeer) {
-  ASSERT_EQ(secure_connection_->localPeer().value(), PeerId::fromPublicKey(local));
+  ASSERT_EQ(secure_connection_->localPeer().value(),
+            PeerId::fromPublicKey(local.data));
 }
 
 /**
@@ -50,7 +51,8 @@ TEST_F(PlaintextConnectionTest, LocalPeer) {
  * @then method behaves as expected
  */
 TEST_F(PlaintextConnectionTest, RemotePeer) {
-  ASSERT_EQ(secure_connection_->remotePeer().value(), PeerId::fromPublicKey(remote));
+  ASSERT_EQ(secure_connection_->remotePeer().value(),
+            PeerId::fromPublicKey(remote.data));
 }
 
 /**

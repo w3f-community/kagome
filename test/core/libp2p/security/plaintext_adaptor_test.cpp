@@ -107,7 +107,7 @@ TEST_F(PlaintextAdaptorTest, SecureInbound) {
  * @then connection is secured
  */
 TEST_F(PlaintextAdaptorTest, SecureOutbound) {
-  const PeerId pid = PeerId::fromPublicKey(remote_pubkey);
+  const PeerId pid = PeerId::fromPublicKey(remote_pubkey.data);
   ON_CALL(*conn, close()).WillByDefault(Return(outcome::success()));
   ON_CALL(*conn, remoteMultiaddr())
       .WillByDefault(Return(libp2p::multi::Multiaddress::create(
@@ -127,7 +127,7 @@ TEST_F(PlaintextAdaptorTest, SecureOutbound) {
         EXPECT_EQ(sec_remote_pubkey, remote_pubkey);
 
         EXPECT_OUTCOME_TRUE(remote_id, sec->remotePeer());
-        auto calculated = PeerId::fromPublicKey(remote_pubkey);
+        auto calculated = PeerId::fromPublicKey(remote_pubkey.data);
 
         EXPECT_EQ(remote_id, calculated);
         EXPECT_EQ(remote_id, pid);
