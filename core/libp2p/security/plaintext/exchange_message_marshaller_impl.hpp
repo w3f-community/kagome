@@ -39,10 +39,9 @@ namespace libp2p::security::plaintext {
 
    private:
     outcome::result<std::unique_ptr<crypto::protobuf::PublicKey>>
-    allocatePubKey(
-        crypto::PublicKey pubkey) const;
+    allocatePubKey(const crypto::PublicKey &pubkey) const;
 
-      std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;
+    std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller_;
   };
 
 }  // namespace libp2p::security::plaintext

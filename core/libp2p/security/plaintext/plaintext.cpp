@@ -107,7 +107,7 @@ namespace libp2p::security {
     constexpr size_t kMaxMsgSize = 4;  // we read uint32_t first
     auto read_bytes = std::make_shared<std::vector<uint8_t>>(kMaxMsgSize);
 
-    conn->readSome(
+    conn->read(
         *read_bytes,
         kMaxMsgSize,
         [self{shared_from_this()}, conn, p, cb{std::move(cb)}, read_bytes](
@@ -121,19 +121,14 @@ namespace libp2p::security {
               std::make_shared<std::vector<uint8_t>>(bytes_size);
           std::cout << "read " << r.value() << " bytes\n";
           std::cout << "received bytes is " << received_bytes << "\n";
-          conn->readSome(*received_bytes,
-                         received_bytes->size(),
-                         [self, conn, p, cb, received_bytes](auto &&r) {
-                           self->readCallback(conn, p, cb, received_bytes, r);
-                         });
+          conn->read(*received_bytes,
+                     received_bytes->size(),
+                     [self, conn, p, cb, received_bytes](auto &&r) {
+                       self->readCallback(conn, p, cb, received_bytes, r);
+                     });
         });
-
-    conn->readSome(
-        *read_bytes,
-        kMaxMsgSize,
-        [self{shared_from_this()}, conn, p, cb{std::move(cb)}, read_bytes](
-            auto &&r) { self->readCallback(conn, p, cb, read_bytes, r); });
   }
+
   void Plaintext::readCallback(
       std::shared_ptr<connection::RawConnection> conn,  // NOLINT
       const MaybePeerId &p,

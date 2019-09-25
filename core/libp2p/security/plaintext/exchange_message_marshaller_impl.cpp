@@ -62,7 +62,7 @@ namespace libp2p::security::plaintext {
 
   outcome::result<std::unique_ptr<crypto::protobuf::PublicKey>>
   ExchangeMessageMarshallerImpl::allocatePubKey(
-      crypto::PublicKey pubkey) const {
+      const crypto::PublicKey &pubkey) const {
     OUTCOME_TRY(proto_pub_key_bytes, marshaller_->marshal(pubkey));
     std::string str_pubkey(proto_pub_key_bytes.begin(),
                            proto_pub_key_bytes.end());
