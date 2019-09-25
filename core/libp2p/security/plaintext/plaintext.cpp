@@ -13,10 +13,10 @@
 #include "libp2p/security/plaintext/plaintext_connection.hpp"
 
 #define PLAINTEXT_OUTCOME_TRY(name, res, conn, cb) \
-  auto name = (res);                               \
-  if (name.has_error()) {                          \
-    conn->close();                                 \
-    cb(name.error());                              \
+  auto(name) = (res);                              \
+  if ((name).has_error()) {                        \
+    (void)(conn)->close();                         \
+    cb((name).error());                            \
     return;                                        \
   }
 
