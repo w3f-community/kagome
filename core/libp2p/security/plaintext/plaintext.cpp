@@ -86,14 +86,14 @@ namespace libp2p::security {
     conn->write(len_bytes, 4, [out_msg, conn, cb{std::move(cb)}](auto &&res) {
       if (res.has_error()) {
         conn->close();
-        cb(Error::EXCHANGE_SEND_ERROR);
+        return cb(Error::EXCHANGE_SEND_ERROR);
       }
       std::cout << "Plaintext: wrote " << res.value() << " bytes\n";
 
       conn->write(out_msg, out_msg.size(), [cb{cb}, conn](auto &&res) {
         if (res.has_error()) {
           conn->close();
-          cb(Error::EXCHANGE_SEND_ERROR);
+          return cb(Error::EXCHANGE_SEND_ERROR);
         }
         std::cout << "Plaintext: wrote " << res.value() << " bytes\n";
       });
