@@ -88,14 +88,14 @@ namespace libp2p::security {
         conn->close();
         cb(Error::EXCHANGE_SEND_ERROR);
       }
-      std::cout << "wrote " << res.value() << " bytes\n";
+      std::cout << "Plaintext: wrote " << res.value() << " bytes\n";
 
       conn->write(out_msg, out_msg.size(), [cb{cb}, conn](auto &&res) {
         if (res.has_error()) {
           conn->close();
           cb(Error::EXCHANGE_SEND_ERROR);
         }
-        std::cout << "wrote " << res.value() << " bytes\n";
+        std::cout << "Plaintext: wrote " << res.value() << " bytes\n";
       });
     });
   }
@@ -112,15 +112,14 @@ namespace libp2p::security {
         kMaxMsgSize,
         [self{shared_from_this()}, conn, p, cb{std::move(cb)}, read_bytes](
             auto &&r) {
-          auto bytes_size = (static_cast<uint32_t>(read_bytes->at(3)) << 24u)
-                            + (static_cast<uint32_t>(read_bytes->at(2)) << 16u)
-                            + (static_cast<uint32_t>(read_bytes->at(1)) << 8u)
-                            + read_bytes->at(0);
+          auto bytes_size = (static_cast<uint32_t>(read_bytes->at(0)) << 24u)
+                            + (static_cast<uint32_t>(read_bytes->at(1)) << 16u)
+                            + (static_cast<uint32_t>(read_bytes->at(2)) << 8u)
+                            + read_bytes->at(3);
 
           auto received_bytes =
               std::make_shared<std::vector<uint8_t>>(bytes_size);
-          std::cout << "read " << r.value() << " bytes\n";
-          std::cout << "received bytes is " << received_bytes << "\n";
+          std::cout << "Plaintext: bytes to be read: " << bytes_size << "\n";
           conn->read(*received_bytes,
                      received_bytes->size(),
                      [self, conn, p, cb, received_bytes](auto &&r) {
@@ -135,22 +134,30 @@ namespace libp2p::security {
       const SecConnCallbackFunc &cb,
       const std::shared_ptr<std::vector<uint8_t>> &read_bytes,
       outcome::result<size_t> read_call_res) const {
-    PLAINTEXT_OUTCOME_TRY(r, read_call_res, conn, cb);
+    PLAINTEXT_OUTCOME_TRY(r, read_call_res, conn, cb)
     size_t read_num = r.value();
-    std::cout << "callback: read " << read_num << " bytes\n";
+    std::cout << "Plaintext: callback: read " << read_num << " bytes\n";
+
     PLAINTEXT_OUTCOME_TRY(
-        in_exchange_msg, marshaller_->unmarshal(*read_bytes), conn, cb);
-    auto received_pid = in_exchange_msg.value().peer_id;
-    auto pkey = in_exchange_msg.value().pubkey;
-    auto derived_pid = peer::PeerId::fromPublicKey(pkey.data);
+        in_exchange_msg, marshaller_->unmarshal(*read_bytes), conn, cb)
+    auto &msg = in_exchange_msg.value().first;
+    auto received_pid = msg.peer_id;
+    auto pkey = msg.pubkey;
+
+    // PeerId is derived from the Protobuf-serialized public key, not raw one
+    auto derived_pid =
+        peer::PeerId::fromPublicKey(in_exchange_msg.value().second);
     if (received_pid != derived_pid) {
+      std::cerr << "Plaintext: received ID {" << received_pid.toBase58()
+                << "} and derived from the public key {"
+                << derived_pid.toBase58() << "} differ\n";
       conn->close();
-      cb(Error::INVALID_PEER_ID);
+      return cb(Error::INVALID_PEER_ID);
     }
     if (p.has_value()) {
       if (received_pid != p.value()) {
         conn->close();
-        cb(Error::INVALID_PEER_ID);
+        return cb(Error::INVALID_PEER_ID);
       }
     }
 

@@ -30,16 +30,14 @@ namespace libp2p::peer {
   PeerId PeerId::fromPublicKey(const std::vector<uint8_t> &key_data) {
     std::vector<uint8_t> hash;
     auto algo = multi::sha256;
-    if(hash.size() <= kMaxInlineKeyLength) {
+    if (key_data.size() <= kMaxInlineKeyLength) {
       algo = multi::identity;
       hash = key_data;
     } else {
       auto shash = kagome::crypto::sha256(key_data);
       hash = std::vector<uint8_t>{shash.begin(), shash.end()};
     }
-    auto multihash =
-        Multihash::create(algo, Buffer(hash))
-            .value();
+    auto multihash = Multihash::create(algo, Buffer(hash)).value();
     return PeerId{std::move(multihash)};
   }
 

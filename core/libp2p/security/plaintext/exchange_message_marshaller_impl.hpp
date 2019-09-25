@@ -25,7 +25,8 @@ namespace libp2p::security::plaintext {
      */
     enum class Error {
       PUBLIC_KEY_SERIALIZING_ERROR = 1,
-      MESSAGE_SERIALIZING_ERROR
+      MESSAGE_SERIALIZING_ERROR,
+      PUBLIC_KEY_DESERIALIZING_ERROR
     };
 
     explicit ExchangeMessageMarshallerImpl(
@@ -34,7 +35,7 @@ namespace libp2p::security::plaintext {
     outcome::result<std::vector<uint8_t>> marshal(
         const ExchangeMessage &msg) const override;
 
-    outcome::result<ExchangeMessage> unmarshal(
+    outcome::result<std::pair<ExchangeMessage, std::vector<uint8_t>>> unmarshal(
         gsl::span<const uint8_t> msg_bytes) const override;
 
    private:

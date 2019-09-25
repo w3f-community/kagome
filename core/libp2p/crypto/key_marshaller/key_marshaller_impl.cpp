@@ -85,7 +85,7 @@ namespace libp2p::crypto::marshaller {
 
     OUTCOME_TRY(type, unmarshalKeyType(protobuf_key.type()));
     KeyMarshallerImpl::ByteArray data(protobuf_key.data().begin(),
-                                           protobuf_key.data().end());
+                                      protobuf_key.data().end());
     auto key = PublicKey{{type, data}};
     OUTCOME_TRY(key_validator_->validate(key));
 
@@ -101,11 +101,11 @@ namespace libp2p::crypto::marshaller {
 
     OUTCOME_TRY(type, unmarshalKeyType(protobuf_key.type()));
     KeyMarshallerImpl::ByteArray data(protobuf_key.data().begin(),
-                                           protobuf_key.data().end());
+                                      protobuf_key.data().end());
     auto key = PrivateKey{{type, data}};
     OUTCOME_TRY(key_validator_->validate(key));
 
     return key;
   }
 
-}  // namespace libp2p::crypto::key_marshaller
+}  // namespace libp2p::crypto::marshaller

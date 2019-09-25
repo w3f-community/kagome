@@ -17,6 +17,10 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security::plaintext,
     case E::MESSAGE_SERIALIZING_ERROR:
       return "Error while encoding the plaintext exchange message to Protobuf "
              "format";
+    case E::PUBLIC_KEY_DESERIALIZING_ERROR:
+      return "Error while decoding the plaintext exchange message from "
+             "Protobuf "
+             "format";
   }
   return "Unknown error";
 }
@@ -45,10 +49,14 @@ namespace libp2p::security::plaintext {
     return out_msg;
   }
 
-  outcome::result<ExchangeMessage> ExchangeMessageMarshallerImpl::unmarshal(
+  outcome::result<std::pair<ExchangeMessage, std::vector<uint8_t>>>
+  ExchangeMessageMarshallerImpl::unmarshal(
       gsl::span<const uint8_t> msg_bytes) const {
     plaintext::protobuf::Exchange exchange_msg;
-    exchange_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size());
+    if (!exchange_msg.ParseFromArray(msg_bytes.data(), msg_bytes.size())) {
+      return Error::PUBLIC_KEY_DESERIALIZING_ERROR;
+    }
+
     std::vector<uint8_t> pubkey_bytes(exchange_msg.pubkey().ByteSizeLong());
     exchange_msg.pubkey().SerializeToArray(pubkey_bytes.data(),
                                            pubkey_bytes.size());
@@ -57,7 +65,7 @@ namespace libp2p::security::plaintext {
     std::vector<uint8_t> peer_id_bytes(exchange_msg.id().begin(),
                                        exchange_msg.id().end());
     OUTCOME_TRY(peer_id, peer::PeerId::fromBytes(peer_id_bytes));
-    return ExchangeMessage{pubkey, peer_id};
+    return {ExchangeMessage{pubkey, peer_id}, std::move(pubkey_bytes)};
   }
 
   outcome::result<std::unique_ptr<crypto::protobuf::PublicKey>>
