@@ -35,7 +35,7 @@ namespace libp2p::security::plaintext {
     outcome::result<std::vector<uint8_t>> marshal(
         const ExchangeMessage &msg) const override;
 
-    outcome::result<std::pair<ExchangeMessage, std::vector<uint8_t>>> unmarshal(
+    outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>> unmarshal(
         gsl::span<const uint8_t> msg_bytes) const override;
 
    private:

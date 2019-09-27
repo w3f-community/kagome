@@ -6,6 +6,7 @@
 #ifndef KAGOME_PLAINTEXT_ADAPTOR_HPP
 #define KAGOME_PLAINTEXT_ADAPTOR_HPP
 
+#include "libp2p/crypto/key_marshaller.hpp"
 #include "libp2p/peer/identity_manager.hpp"
 #include "libp2p/security/plaintext/exchange_message_marshaller.hpp"
 #include "libp2p/security/security_adaptor.hpp"
@@ -34,8 +35,10 @@ namespace libp2p::security {
 
     ~Plaintext() override = default;
 
-    Plaintext(std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller,
-              std::shared_ptr<peer::IdentityManager> idmgr);
+    Plaintext(
+        std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller,
+        std::shared_ptr<peer::IdentityManager> idmgr,
+        std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller);
 
     peer::Protocol getProtocolId() const override;
 
@@ -66,6 +69,7 @@ namespace libp2p::security {
 
     std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller_;
     std::shared_ptr<peer::IdentityManager> idmgr_;
+    std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller_;
   };
 }  // namespace libp2p::security
 

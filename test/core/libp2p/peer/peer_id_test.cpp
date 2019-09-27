@@ -39,7 +39,7 @@ TEST_F(PeerIdTest, FromPubkeySuccess) {
   EXPECT_OUTCOME_TRUE(
       multihash, Multihash::create(sha256, Buffer{hash.begin(), hash.end()}))
 
-  auto peer_id = PeerId::fromPublicKey(pubkey.data);
+  auto peer_id = PeerId::fromPublicKey(ProtobufKey{pubkey.data});
   EXPECT_EQ(peer_id.toBase58(), encodeBase58(multihash.toBuffer()));
   EXPECT_EQ(peer_id.toMultihash(), multihash);
 }
@@ -126,7 +126,7 @@ TEST_F(PeerIdTest, GoCompat) {
   auto generator = std::make_shared<KeyGeneratorImpl>(*csprng);
   auto validator = std::make_shared<validator::KeyValidatorImpl>(generator);
   marshaller::KeyMarshallerImpl marshaller(validator);
-  pk.data = marshaller.marshal(pk).value();
-  auto id = PeerId::fromPublicKey(pk.data);
+  pk.data = marshaller.marshal(pk).value().key;
+  auto id = PeerId::fromPublicKey(ProtobufKey{pk.data});
   ASSERT_EQ(id.toBase58(), "QmSv2EN7qEHxVEu6RNeVSQGK8RqjRuc3RFfEJLHMVJmt1K");
 }

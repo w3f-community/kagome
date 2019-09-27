@@ -4,6 +4,7 @@
  */
 
 #include "libp2p/peer/impl/identity_manager_impl.hpp"
+
 #include "libp2p/crypto/key_marshaller.hpp"
 
 namespace libp2p::peer {
@@ -20,7 +21,7 @@ namespace libp2p::peer {
 
   IdentityManagerImpl::IdentityManagerImpl(
       crypto::KeyPair keyPair,
-      std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller) {
+      const std::shared_ptr<crypto::marshaller::KeyMarshaller> &marshaller) {
     BOOST_ASSERT(!keyPair.publicKey.data.empty());
     BOOST_ASSERT(marshaller);
 

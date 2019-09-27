@@ -326,23 +326,26 @@ namespace kagome::blockchain {
       const primitives::BlockHash &target_hash,
       const boost::optional<primitives::BlockNumber> &limit) const {
     OUTCOME_TRY(target_header, header_repo_->getBlockHeader(target_hash));
-    if(limit.has_value()) {
-      if(target_header.number > limit.value()) {
-        //return Error::TARGET_GREATER_THAN_LIMIT;
+    if (limit.has_value()) {
+      if (target_header.number > limit.value()) {
+        return BlockTreeError::TARGET_GREATER_THAN_LIMIT;
       }
     }
-    OUTCOME_TRY(canon_hash, header_repo_->getHashByNumber(target_header.number));
+
+    OUTCOME_TRY(canon_hash,
+                header_repo_->getHashByNumber(target_header.number));
     // if a `max_number` is given we try to fetch the block at the
     // given depth, if it doesn't exist or `max_number` is not
     // provided, we continue to search from all leaves below.
     if (canon_hash == target_hash && limit.has_value()) {
       auto header = header_repo_->getBlockHeader(limit.value());
-      if(header) {
+      if (header) {
         OUTCOME_TRY(hash, header_repo_->getHashByNumber(header.value().number));
-        return BlockInfo {header.value().number, hash};
+        return BlockInfo{header.value().number, hash};
       }
     }
 
+    return BlockTreeError::NO_FINALITY_TARGET;
   }
 
   std::vector<primitives::BlockHash> BlockTreeImpl::getLeaves() const {

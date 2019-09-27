@@ -35,14 +35,31 @@ OUTCOME_CPP_DEFINE_CATEGORY(libp2p::security, Plaintext::Error, e) {
   return "Unknown error";
 }
 
+namespace {
+  /**
+   * Close (\param conn) and report error in case of failure
+   */
+  void closeConnection(
+      const std::shared_ptr<libp2p::connection::RawConnection> &conn) {
+    if (auto close_res = conn->close(); !close_res) {
+      std::cerr << "connection close attempt ended with error: "
+                << close_res.error().message();
+    }
+  }
+}  // namespace
+
 namespace libp2p::security {
 
   Plaintext::Plaintext(
       std::shared_ptr<plaintext::ExchangeMessageMarshaller> marshaller,
-      std::shared_ptr<peer::IdentityManager> idmgr)
-      : marshaller_(std::move(marshaller)), idmgr_(std::move(idmgr)) {
+      std::shared_ptr<peer::IdentityManager> idmgr,
+      std::shared_ptr<crypto::marshaller::KeyMarshaller> key_marshaller)
+      : marshaller_(std::move(marshaller)),
+        idmgr_(std::move(idmgr)),
+        key_marshaller_{std::move(key_marshaller)} {
     BOOST_ASSERT(marshaller_);
     BOOST_ASSERT(idmgr_);
+    BOOST_ASSERT(key_marshaller_);
   }
 
   peer::Protocol Plaintext::getProtocolId() const {
@@ -73,7 +90,7 @@ namespace libp2p::security {
                               .pubkey = idmgr_->getKeyPair().publicKey,
                               .peer_id = idmgr_->getId()}),
                           conn,
-                          cb);
+                          cb)
 
     auto out_msg = out_msg_res.value();
     auto len = out_msg.size();
@@ -85,14 +102,14 @@ namespace libp2p::security {
 
     conn->write(len_bytes, 4, [out_msg, conn, cb{std::move(cb)}](auto &&res) {
       if (res.has_error()) {
-        conn->close();
+        closeConnection(conn);
         return cb(Error::EXCHANGE_SEND_ERROR);
       }
       std::cout << "Plaintext: wrote " << res.value() << " bytes\n";
 
       conn->write(out_msg, out_msg.size(), [cb{cb}, conn](auto &&res) {
         if (res.has_error()) {
-          conn->close();
+          closeConnection(conn);
           return cb(Error::EXCHANGE_SEND_ERROR);
         }
         std::cout << "Plaintext: wrote " << res.value() << " bytes\n";
@@ -151,18 +168,21 @@ namespace libp2p::security {
       std::cerr << "Plaintext: received ID {" << received_pid.toBase58()
                 << "} and derived from the public key {"
                 << derived_pid.toBase58() << "} differ\n";
-      conn->close();
+      closeConnection(conn);
       return cb(Error::INVALID_PEER_ID);
     }
     if (p.has_value()) {
       if (received_pid != p.value()) {
-        conn->close();
+        closeConnection(conn);
         return cb(Error::INVALID_PEER_ID);
       }
     }
 
     cb(std::make_shared<connection::PlaintextConnection>(
-        std::move(conn), idmgr_->getKeyPair().publicKey, std::move(pkey)));
+        std::move(conn),
+        idmgr_->getKeyPair().publicKey,
+        std::move(pkey),
+        key_marshaller_));
   }
 
 }  // namespace libp2p::security

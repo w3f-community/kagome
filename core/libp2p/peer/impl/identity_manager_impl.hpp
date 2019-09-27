@@ -18,7 +18,7 @@ namespace libp2p::peer {
 
     explicit IdentityManagerImpl(
         crypto::KeyPair keyPair,
-        std::shared_ptr<crypto::marshaller::KeyMarshaller> marshaller);
+        const std::shared_ptr<crypto::marshaller::KeyMarshaller> &marshaller);
 
     const peer::PeerId &getId() const override;
 

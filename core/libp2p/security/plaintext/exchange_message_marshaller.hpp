@@ -9,6 +9,9 @@
 #include <utility>
 #include <vector>
 
+#include <gsl/span>
+#include <outcome/outcome.hpp>
+#include "libp2p/crypto/protobuf/protobuf_key.hpp"
 #include "libp2p/security/plaintext/exchange_message.hpp"
 
 namespace libp2p::security::plaintext {
@@ -35,7 +38,7 @@ namespace libp2p::security::plaintext {
      * @returns a deserialized exchange message and a Protobuf representation of
      * the public key
      */
-    virtual outcome::result<std::pair<ExchangeMessage, std::vector<uint8_t>>>
+    virtual outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
     unmarshal(gsl::span<const uint8_t> msg_bytes) const = 0;
   };
 

@@ -24,6 +24,10 @@ OUTCOME_CPP_DEFINE_CATEGORY(kagome::blockchain, BlockTreeError, e) {
       return "arguments, which were provided, are incorrect";
     case E::INTERNAL_ERROR:
       return "internal error happened";
+    case E::TARGET_GREATER_THAN_LIMIT:
+      return "target greater than limit";
+    case E::NO_FINALITY_TARGET:
+      return "no finality target was found";
   }
   return "unknown error";
 }

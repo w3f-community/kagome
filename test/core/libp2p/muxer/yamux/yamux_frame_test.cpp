@@ -24,15 +24,18 @@ class YamuxFrameTest : public ::testing::Test {
   /**
    * Check that all frame's fields are as expected
    */
-  void checkFrame(boost::optional<YamuxFrame> frame_opt, uint8_t version,
-                  YamuxFrame::FrameType type, YamuxFrame::Flag flag,
-                  YamuxedConnection::StreamId stream_id, uint32_t length,
+  void checkFrame(boost::optional<YamuxFrame> frame_opt,
+                  uint8_t version,
+                  YamuxFrame::FrameType type,
+                  YamuxFrame::Flag flag,
+                  YamuxedConnection::StreamId stream_id,
+                  uint32_t length,
                   const Buffer &frame_data) {
     ASSERT_TRUE(frame_opt);
     auto frame = *frame_opt;
     ASSERT_EQ(frame.version, version);
     ASSERT_EQ(frame.type, type);
-    ASSERT_EQ(frame.flag, flag);
+    ASSERT_EQ(frame.flags, static_cast<uint16_t>(flag));
     ASSERT_EQ(frame.stream_id, stream_id);
     ASSERT_EQ(frame.length, length);
     ASSERT_EQ(frame.data, frame_data);
@@ -49,9 +52,13 @@ TEST_F(YamuxFrameTest, ParseFrameSuccess) {
   auto frame_opt = parseFrame(data_frame_bytes.toVector());
 
   SCOPED_TRACE("ParseFrameSuccess");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::SYN,
-             default_stream_id, data_length, data);
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::DATA,
+             YamuxFrame::Flag::SYN,
+             default_stream_id,
+             data_length,
+             data);
 }
 
 /**
@@ -75,9 +82,13 @@ TEST_F(YamuxFrameTest, NewStreamMsg) {
   auto frame_opt = parseFrame(frame_bytes.toVector());
 
   SCOPED_TRACE("NewStreamMsg");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::SYN,
-             default_stream_id, 0, Buffer{});
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::DATA,
+             YamuxFrame::Flag::SYN,
+             default_stream_id,
+             0,
+             Buffer{});
 }
 
 /**
@@ -90,9 +101,13 @@ TEST_F(YamuxFrameTest, AckStreamMsg) {
   auto frame_opt = parseFrame(frame_bytes.toVector());
 
   SCOPED_TRACE("AckStreamMsg");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::ACK,
-             default_stream_id, 0, Buffer{});
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::DATA,
+             YamuxFrame::Flag::ACK,
+             default_stream_id,
+             0,
+             Buffer{});
 }
 
 /**
@@ -105,9 +120,13 @@ TEST_F(YamuxFrameTest, CloseStreamMsg) {
   auto frame_opt = parseFrame(frame_bytes.toVector());
 
   SCOPED_TRACE("CloseStreamMsg");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::FIN,
-             default_stream_id, 0, Buffer{});
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::DATA,
+             YamuxFrame::Flag::FIN,
+             default_stream_id,
+             0,
+             Buffer{});
 }
 
 /**
@@ -120,9 +139,13 @@ TEST_F(YamuxFrameTest, ResetStreamMsg) {
   auto frame_opt = parseFrame(frame_bytes.toVector());
 
   SCOPED_TRACE("ResetStreamMsg");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::DATA, YamuxFrame::Flag::RST,
-             default_stream_id, 0, Buffer{});
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::DATA,
+             YamuxFrame::Flag::RST,
+             default_stream_id,
+             0,
+             Buffer{});
 }
 
 /**
@@ -135,9 +158,13 @@ TEST_F(YamuxFrameTest, PingOutMsg) {
   auto frame_opt = parseFrame(frame_bytes.toVector());
 
   SCOPED_TRACE("PingOutMsg");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::PING, YamuxFrame::Flag::SYN, 0,
-             default_ping_value, Buffer{});
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::PING,
+             YamuxFrame::Flag::SYN,
+             0,
+             default_ping_value,
+             Buffer{});
 }
 
 /**
@@ -150,9 +177,13 @@ TEST_F(YamuxFrameTest, PingResponseMsg) {
   auto frame_opt = parseFrame(frame_bytes.toVector());
 
   SCOPED_TRACE("PingResponseMsg");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::PING, YamuxFrame::Flag::ACK, 0,
-             default_ping_value, Buffer{});
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::PING,
+             YamuxFrame::Flag::ACK,
+             0,
+             default_ping_value,
+             Buffer{});
 }
 
 /**
@@ -165,8 +196,11 @@ TEST_F(YamuxFrameTest, GoAwayMsg) {
   auto frame_opt = parseFrame(frame_bytes.toVector());
 
   SCOPED_TRACE("GoAwayMsg");
-  checkFrame(frame_opt, YamuxFrame::kDefaultVersion,
-             YamuxFrame::FrameType::GO_AWAY, YamuxFrame::Flag::SYN, 0,
+  checkFrame(frame_opt,
+             YamuxFrame::kDefaultVersion,
+             YamuxFrame::FrameType::GO_AWAY,
+             YamuxFrame::Flag::SYN,
+             0,
              static_cast<uint32_t>(YamuxFrame::GoAwayError::PROTOCOL_ERROR),
              Buffer{});
 }

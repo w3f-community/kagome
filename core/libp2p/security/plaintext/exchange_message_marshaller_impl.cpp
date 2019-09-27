@@ -49,7 +49,7 @@ namespace libp2p::security::plaintext {
     return out_msg;
   }
 
-  outcome::result<std::pair<ExchangeMessage, std::vector<uint8_t>>>
+  outcome::result<std::pair<ExchangeMessage, crypto::ProtobufKey>>
   ExchangeMessageMarshallerImpl::unmarshal(
       gsl::span<const uint8_t> msg_bytes) const {
     plaintext::protobuf::Exchange exchange_msg;
@@ -60,20 +60,23 @@ namespace libp2p::security::plaintext {
     std::vector<uint8_t> pubkey_bytes(exchange_msg.pubkey().ByteSizeLong());
     exchange_msg.pubkey().SerializeToArray(pubkey_bytes.data(),
                                            pubkey_bytes.size());
-    OUTCOME_TRY(pubkey, marshaller_->unmarshalPublicKey(pubkey_bytes));
+    OUTCOME_TRY(
+        pubkey,
+        marshaller_->unmarshalPublicKey(crypto::ProtobufKey{pubkey_bytes}));
 
     std::vector<uint8_t> peer_id_bytes(exchange_msg.id().begin(),
                                        exchange_msg.id().end());
     OUTCOME_TRY(peer_id, peer::PeerId::fromBytes(peer_id_bytes));
-    return {ExchangeMessage{pubkey, peer_id}, std::move(pubkey_bytes)};
+    return {ExchangeMessage{pubkey, peer_id},
+            crypto::ProtobufKey{std::move(pubkey_bytes)}};
   }
 
   outcome::result<std::unique_ptr<crypto::protobuf::PublicKey>>
   ExchangeMessageMarshallerImpl::allocatePubKey(
       const crypto::PublicKey &pubkey) const {
     OUTCOME_TRY(proto_pub_key_bytes, marshaller_->marshal(pubkey));
-    std::string str_pubkey(proto_pub_key_bytes.begin(),
-                           proto_pub_key_bytes.end());
+    std::string str_pubkey(proto_pub_key_bytes.key.begin(),
+                           proto_pub_key_bytes.key.end());
     auto pubkey_msg = std::make_unique<crypto::protobuf::PublicKey>();
     if (!pubkey_msg->ParseFromString(str_pubkey)) {
       return Error::PUBLIC_KEY_SERIALIZING_ERROR;

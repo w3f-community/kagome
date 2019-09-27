@@ -133,7 +133,7 @@ namespace kagome::blockchain {
      * TODO(Harrm) document it
      */
     virtual outcome::result<BlockInfo> finalityTarget(
-        const primitives::BlockHash & target_hash,
+        const primitives::BlockHash &target_hash,
         const boost::optional<primitives::BlockNumber> &limit) const = 0;
 
     /**

@@ -19,21 +19,19 @@ namespace libp2p::crypto::marshaller {
 
     ~KeyMarshallerImpl() override = default;
 
-    outcome::result<KeyMarshaller::ByteArray> marshal(
-        const PublicKey &key) const override;
+    outcome::result<ProtobufKey> marshal(const PublicKey &key) const override;
 
-    outcome::result<KeyMarshaller::ByteArray> marshal(
-        const PrivateKey &key) const override;
+    outcome::result<ProtobufKey> marshal(const PrivateKey &key) const override;
 
     outcome::result<PublicKey> unmarshalPublicKey(
-        const KeyMarshaller::ByteArray &key_bytes) const override;
+        const ProtobufKey &key) const override;
 
     outcome::result<PrivateKey> unmarshalPrivateKey(
-        const KeyMarshaller::ByteArray &key_bytes) const override;
+        const ProtobufKey &key) const override;
 
    private:
     std::shared_ptr<validator::KeyValidator> key_validator_;
   };
-}  // namespace libp2p::crypto::key_marshaller
+}  // namespace libp2p::crypto::marshaller
 
 #endif  // KAGOME_CORE_LIBP2P_CRYPTO_MARSHALER_KEY_MARSHALER_IMPL_HPP

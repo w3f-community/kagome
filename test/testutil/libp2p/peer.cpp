@@ -4,6 +4,7 @@
  */
 
 #include "testutil/libp2p/peer.hpp"
+#include "libp2p/crypto/protobuf/protobuf_key.hpp"
 
 namespace testutil {
 
@@ -16,7 +17,7 @@ namespace testutil {
       k.data[i] = (rand() & 0xff);
     }
 
-    return PeerId::fromPublicKey(k.data);
+    return PeerId::fromPublicKey(libp2p::crypto::ProtobufKey{k.data});
   }
 
 }  // namespace testutil

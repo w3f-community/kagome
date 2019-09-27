@@ -8,6 +8,7 @@
 
 #include <outcome/outcome.hpp>
 #include "libp2p/crypto/key.hpp"
+#include "libp2p/crypto/protobuf/protobuf_key.hpp"
 #include "libp2p/multi/multihash.hpp"
 
 namespace libp2p::peer {
@@ -33,7 +34,7 @@ namespace libp2p::peer {
      * @param key, from which PeerId is to be created
      * @return instance of PeerId
      */
-    static PeerId fromPublicKey(const std::vector<uint8_t> &key_data);
+    static PeerId fromPublicKey(const crypto::ProtobufKey &key);
 
     /**
      * Create a PeerId from the byte array (serialized multihash).

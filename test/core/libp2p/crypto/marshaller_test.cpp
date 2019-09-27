@@ -8,11 +8,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "libp2p/crypto/common.hpp"
+#include "libp2p/crypto/protobuf/protobuf_key.hpp"
 #include "mock/core/libp2p/crypto/key_validator_mock.hpp"
 
 using Buffer = std::vector<uint8_t>;
 using libp2p::crypto::Key;
 using libp2p::crypto::PrivateKey;
+using libp2p::crypto::ProtobufKey;
 using libp2p::crypto::PublicKey;
 using libp2p::crypto::marshaller::KeyMarshallerImpl;
 using libp2p::crypto::validator::KeyValidator;
@@ -71,10 +73,10 @@ TEST_P(Pubkey, Valid) {
     ASSERT_TRUE(res);
     auto &&val = res.value();
 
-    ASSERT_EQ(val, match);
+    ASSERT_EQ(val.key, match);
   }
   {
-    auto &&res = marshaller_.unmarshalPublicKey(match);
+    auto &&res = marshaller_.unmarshalPublicKey(ProtobufKey{match});
     ASSERT_TRUE(res);
     auto &&val = res.value();
     ASSERT_EQ(val.type, key.type);
@@ -94,10 +96,10 @@ TEST_P(Privkey, Valid) {
     ASSERT_TRUE(res);
     auto &&val = res.value();
 
-    ASSERT_EQ(val, match);
+    ASSERT_EQ(val.key, match);
   }
   {
-    auto &&res = marshaller_.unmarshalPrivateKey(match);
+    auto &&res = marshaller_.unmarshalPrivateKey(ProtobufKey{match});
     ASSERT_TRUE(res);
     auto &&val = res.value();
     ASSERT_EQ(val.type, key.type);
@@ -117,8 +119,10 @@ auto makeTestCases() {
   // clang-format on
 }
 
-INSTANTIATE_TEST_CASE_P(Marshaller, Pubkey,
+INSTANTIATE_TEST_CASE_P(Marshaller,
+                        Pubkey,
                         ::testing::ValuesIn(makeTestCases<PublicKey>()));
 
-INSTANTIATE_TEST_CASE_P(Marshaller, Privkey,
+INSTANTIATE_TEST_CASE_P(Marshaller,
+                        Privkey,
                         ::testing::ValuesIn(makeTestCases<PrivateKey>()));

@@ -42,6 +42,11 @@ namespace kagome::blockchain {
 
     MOCK_CONST_METHOD0(deepestLeaf, blockchain::BlockTree::BlockInfo());
 
+    MOCK_CONST_METHOD2(finalityTarget,
+                       outcome::result<BlockInfo>(
+                           const primitives::BlockHash &,
+                           const boost::optional<primitives::BlockNumber> &));
+
     MOCK_CONST_METHOD0(getLeaves, std::vector<primitives::BlockHash>());
 
     MOCK_METHOD1(getChildren, BlockHashVecRes(const primitives::BlockHash &));

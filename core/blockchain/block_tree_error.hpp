@@ -20,7 +20,9 @@ namespace kagome::blockchain {
     HASH_FAILED,
     NO_SUCH_BLOCK,
     INCORRECT_ARGS,
-    INTERNAL_ERROR
+    INTERNAL_ERROR,
+    TARGET_GREATER_THAN_LIMIT,
+    NO_FINALITY_TARGET
   };
 }  // namespace kagome::blockchain
 
