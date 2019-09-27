@@ -132,14 +132,14 @@ namespace kagome::consensus {
     // identifiers are guaranteed to be correct, so use .value() directly
     auto put_res = inherent_data.putData(
         primitives::InherentIdentifier::fromString("timstap0").value(),
-        common::Buffer{}.putUint64(epoch_secs));
+        common::Buffer{}.putUint64BE(epoch_secs));
     if (!put_res) {
       return log_->error("cannot put an inherent data: {}",
                          put_res.error().message());
     }
     put_res = inherent_data.putData(
         primitives::InherentIdentifier::fromString("babeslot").value(),
-        common::Buffer{}.putUint64(current_slot_));
+        common::Buffer{}.putUint64BE(current_slot_));
     if (!put_res) {
       return log_->error("cannot put an inherent data: {}",
                          put_res.error().message());

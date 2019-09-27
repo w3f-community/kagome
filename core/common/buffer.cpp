@@ -13,7 +13,14 @@ namespace kagome::common {
     return data_.size();
   }
 
-  Buffer &Buffer::putUint32(uint32_t n) {
+  Buffer &Buffer::putUint16BE(uint16_t n) {
+    data_.push_back(static_cast<unsigned char &&>((n >> 8) & 0xFF));
+    data_.push_back(static_cast<unsigned char &&>((n)&0xFF));
+
+    return *this;
+  }
+
+  Buffer &Buffer::putUint32BE(uint32_t n) {
     data_.push_back(static_cast<unsigned char &&>((n >> 24) & 0xFF));
     data_.push_back(static_cast<unsigned char &&>((n >> 16) & 0xFF));
     data_.push_back(static_cast<unsigned char &&>((n >> 8) & 0xFF));
@@ -22,7 +29,7 @@ namespace kagome::common {
     return *this;
   }
 
-  Buffer &Buffer::putUint64(uint64_t n) {
+  Buffer &Buffer::putUint64BE(uint64_t n) {
     data_.push_back(static_cast<unsigned char &&>((n >> 56u) & 0xFF));
     data_.push_back(static_cast<unsigned char &&>((n >> 48u) & 0xFF));
     data_.push_back(static_cast<unsigned char &&>((n >> 40u) & 0xFF));

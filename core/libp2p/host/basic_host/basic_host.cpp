@@ -4,8 +4,11 @@
  */
 
 #include "libp2p/host/basic_host/basic_host.hpp"
+
 #include <iostream>
+
 #include "common/hexutil.hpp"
+#include "libp2p/crypto/key_marshaller/key_marshaller_impl.hpp"
 
 namespace libp2p::host {
 
@@ -103,7 +106,7 @@ namespace libp2p::host {
   void BasicHost::start() {
     std::cout << "Public key: ";
     auto pk = idmgr_->getKeyPair().publicKey;
-    for(int i: pk.data) {
+    for (int i : pk.data) {
       std::cout << i << " ";
     }
     std::cout << "\n";

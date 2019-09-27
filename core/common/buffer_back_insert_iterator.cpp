@@ -32,13 +32,13 @@ public:
 
   back_insert_iterator<Buffer>&
   operator=(uint32_t value) {
-    buf_.putUint32(value);
+    buf_.putUint32BE(value);
     return *this;
   }
 
   back_insert_iterator<Buffer>&
   operator=(uint64_t value) {
-    buf_.putUint64(value);
+    buf_.putUint64BE(value);
     return *this;
   }
 

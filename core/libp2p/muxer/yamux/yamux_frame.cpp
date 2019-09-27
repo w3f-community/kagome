@@ -5,47 +5,28 @@
 
 #include "libp2p/muxer/yamux/yamux_frame.hpp"
 
-namespace {
-  using kagome::common::Buffer;
-
-  Buffer &putUint8(Buffer &buffer, uint8_t number) {
-    buffer.putUint8(number);
-    return buffer;
-  }
-
-  Buffer &putUint16NetworkOrder(Buffer &buffer, uint16_t number) {
-    buffer.putUint8(static_cast<unsigned char &&>((number)&0xFF));
-    buffer.putUint8(static_cast<unsigned char &&>((number >> 8) & 0xFF));
-    return buffer;
-  }
-
-  Buffer &putUint32NetworkOrder(Buffer &buffer, uint32_t number) {
-    buffer.putUint8(static_cast<unsigned char &&>((number)&0xFF));
-    buffer.putUint8(static_cast<unsigned char &&>((number >> 8) & 0xFF));
-    buffer.putUint8(static_cast<unsigned char &&>((number >> 16) & 0xFF));
-    buffer.putUint8(static_cast<unsigned char &&>((number >> 24) & 0xFF));
-    return buffer;
-  }
-}  // namespace
+#include <arpa/inet.h>
 
 namespace libp2p::connection {
-  kagome::common::Buffer YamuxFrame::frameBytes(uint8_t version,
-                                                FrameType type,
-                                                Flag flag,
-                                                uint32_t stream_id,
-                                                uint32_t length,
-                                                gsl::span<const uint8_t> data) {
-    // TODO(akvinikym) PRE-118 15.04.19: refactor with NetworkOrderEncoder, when
-    // implemented
-    kagome::common::Buffer buffer{};
-    return putUint32NetworkOrder(
-               putUint32NetworkOrder(
-                   putUint16NetworkOrder(putUint8(putUint8(buffer, version),
-                                                  static_cast<uint8_t>(type)),
-                                         static_cast<uint16_t>(flag)),
-                   stream_id),
-               length)
+  using kagome::common::Buffer;
+
+  Buffer YamuxFrame::frameBytes(uint8_t version,
+                                FrameType type,
+                                Flag flag,
+                                uint32_t stream_id,
+                                uint32_t length,
+                                gsl::span<const uint8_t> data) {
+    return Buffer{}
+        .putUint8(version)
+        .putUint8(static_cast<uint8_t>(type))
+        .putUint16BE(static_cast<uint16_t>(flag))
+        .putUint32BE(stream_id)
+        .putUint32BE(length)
         .put(data);
+  }
+
+  bool YamuxFrame::flagIsSet(Flag flag) const {
+    return static_cast<uint16_t>(flag) & flags;
   }
 
   kagome::common::Buffer newStreamMsg(YamuxFrame::StreamId stream_id) {
@@ -100,7 +81,7 @@ namespace libp2p::connection {
                                  gsl::span<const uint8_t> data) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::DATA,
-                                  YamuxFrame::Flag::SYN,
+                                  YamuxFrame::Flag::NONE,
                                   stream_id,
                                   static_cast<uint32_t>(data.size()),
                                   data);
@@ -109,7 +90,7 @@ namespace libp2p::connection {
   kagome::common::Buffer goAwayMsg(YamuxFrame::GoAwayError error) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::GO_AWAY,
-                                  YamuxFrame::Flag::SYN,
+                                  YamuxFrame::Flag::NONE,
                                   0,
                                   static_cast<uint32_t>(error));
   }
@@ -118,7 +99,7 @@ namespace libp2p::connection {
                                          uint32_t window_delta) {
     return YamuxFrame::frameBytes(YamuxFrame::kDefaultVersion,
                                   YamuxFrame::FrameType::WINDOW_UPDATE,
-                                  YamuxFrame::Flag::SYN,
+                                  YamuxFrame::Flag::NONE,
                                   stream_id,
                                   window_delta);
   }
@@ -149,35 +130,16 @@ namespace libp2p::connection {
         return {};
     }
 
-    // TODO(akvinikym) PRE-118 15.04.19: refactor with NetworkOrderEncoder, when
-    // implemented
+    uint16_t flags;
+    memcpy(&flags, &frame_bytes[2], sizeof(flags));
+    frame.flags = ntohs(flags);
 
-    switch ((static_cast<uint16_t>(frame_bytes[3]) << 8) | frame_bytes[2]) {
-      case 1:
-        frame.flag = YamuxFrame::Flag::SYN;
-        break;
-      case 2:
-        frame.flag = YamuxFrame::Flag::ACK;
-        break;
-      case 4:
-        frame.flag = YamuxFrame::Flag::FIN;
-        break;
-      case 8:
-        frame.flag = YamuxFrame::Flag::RST;
-        break;
-      default:
-        return {};
-    }
+    uint32_t temp32;
+    memcpy(&temp32, &frame_bytes[4], sizeof(temp32));
+    frame.stream_id = ntohl(temp32);
 
-    frame.stream_id = (static_cast<uint32_t>(frame_bytes[7]) << 24)
-                      | (static_cast<uint16_t>(frame_bytes[6]) << 16)
-                      | (static_cast<uint16_t>(frame_bytes[5]) << 8)
-                      | (static_cast<uint16_t>(frame_bytes[4]));
-
-    frame.length = (static_cast<uint32_t>(frame_bytes[11]) << 24)
-                   | (static_cast<uint16_t>(frame_bytes[10]) << 16)
-                   | (static_cast<uint16_t>(frame_bytes[9]) << 8)
-                   | (static_cast<uint16_t>(frame_bytes[8]));
+    memcpy(&temp32, &frame_bytes[8], sizeof(temp32));
+    frame.length = ntohl(temp32);
 
     const auto &data_begin = frame_bytes.begin() + YamuxFrame::kHeaderLength;
     if (data_begin != frame_bytes.end()) {

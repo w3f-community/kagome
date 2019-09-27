@@ -5,11 +5,17 @@
 
 #include "libp2p/protocol/echo/server_echo_session.hpp"
 
+#include <boost/assert.hpp>
+
 namespace libp2p::protocol {
 
-  ServerEchoSession::ServerEchoSession(std::shared_ptr<connection::Stream> stream,
-                           EchoConfig config)
-      : stream_(std::move(stream)), buf_(config.max_recv_size, 0) {
+  ServerEchoSession::ServerEchoSession(
+      std::shared_ptr<connection::Stream> stream,
+      EchoConfig config,
+      kagome::common::Logger log)
+      : stream_(std::move(stream)),
+        buf_(config.max_recv_size, 0),
+        log_{std::move(log)} {
     BOOST_ASSERT(stream_ != nullptr);
     BOOST_ASSERT(config.max_recv_size > 0);
   }
@@ -19,8 +25,10 @@ namespace libp2p::protocol {
   }
 
   void ServerEchoSession::stop() {
-    stream_->close([self{shared_from_this()}](auto && /* ignore */) {
-      // ignore result
+    stream_->close([self{shared_from_this()}](auto &&res) {
+      if (!res) {
+        self->log_->error("cannot close the stream: {}", res.error().message());
+      }
     });
   }
 
@@ -30,7 +38,8 @@ namespace libp2p::protocol {
     }
 
     stream_->readSome(
-        buf_, buf_.size(),
+        buf_,
+        buf_.size(),
         [self{shared_from_this()}](outcome::result<size_t> rread) {
           self->onRead(rread);
         });
@@ -38,9 +47,12 @@ namespace libp2p::protocol {
 
   void ServerEchoSession::onRead(outcome::result<size_t> rread) {
     if (!rread) {
+      log_->error("error happened during read: {}", rread.error().message());
       return stop();
     }
 
+    log_->info("read message: {}",
+               std::string{buf_.begin(), buf_.begin() + rread.value()});
     this->doWrite(rread.value());
   }
 
@@ -49,17 +61,20 @@ namespace libp2p::protocol {
       return stop();
     }
 
-    stream_->write(buf_, size,
-                   [self{shared_from_this()}](outcome::result<size_t> rwrite) {
-                     self->onWrite(rwrite);
-                   });
+    stream_->write(
+        buf_, size, [self{shared_from_this()}](outcome::result<size_t> rwrite) {
+          self->onWrite(rwrite);
+        });
   }
 
   void ServerEchoSession::onWrite(outcome::result<size_t> rwrite) {
     if (!rwrite) {
+      log_->error("error happened during write: {}", rwrite.error().message());
       return stop();
     }
 
+    log_->info("written message: {}",
+               std::string{buf_.begin(), buf_.begin() + rwrite.value()});
     doRead();
   }
 }  // namespace libp2p::protocol

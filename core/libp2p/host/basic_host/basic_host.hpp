@@ -9,6 +9,7 @@
 #include "libp2p/event/bus.hpp"
 #include "libp2p/host/host.hpp"
 #include "libp2p/peer/identity_manager.hpp"
+#include "libp2p/protocol/identify.hpp"
 
 namespace libp2p::host {
 
@@ -52,7 +53,8 @@ namespace libp2p::host {
         const std::function<connection::Stream::Handler> &handler,
         const std::function<bool(const peer::Protocol &)> &predicate) override;
 
-    void newStream(const peer::PeerInfo &p, const peer::Protocol &protocol,
+    void newStream(const peer::PeerInfo &p,
+                   const peer::Protocol &protocol,
                    const StreamResultHandler &handler) override;
 
     outcome::result<void> listen(const multi::Multiaddress &ma) override;
@@ -78,6 +80,8 @@ namespace libp2p::host {
     std::shared_ptr<peer::IdentityManager> idmgr_;
     std::unique_ptr<network::Network> network_;
     std::unique_ptr<peer::PeerRepository> repo_;
+
+    std::shared_ptr<protocol::Identify> identify_;
 
     event::Bus bus_;
   };

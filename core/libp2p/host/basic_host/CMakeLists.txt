@@ -6,4 +6,5 @@ add_library(libp2p_basic_host
     )
 target_link_libraries(libp2p_basic_host
     outcome
+    libp2p_identify
     )

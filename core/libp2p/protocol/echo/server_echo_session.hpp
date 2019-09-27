@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include <boost/assert.hpp>
+#include "common/logger.hpp"
 #include "libp2p/connection/stream.hpp"
 #include "libp2p/protocol/echo/echo_config.hpp"
 
@@ -20,8 +20,10 @@ namespace libp2p::protocol {
   class ServerEchoSession
       : public std::enable_shared_from_this<ServerEchoSession> {
    public:
-    explicit ServerEchoSession(std::shared_ptr<connection::Stream> stream,
-                               EchoConfig config = {});
+    explicit ServerEchoSession(
+        std::shared_ptr<connection::Stream> stream,
+        EchoConfig config = {},
+        kagome::common::Logger log = kagome::common::createLogger("Echo"));
 
     // start session
     void start();
@@ -32,6 +34,7 @@ namespace libp2p::protocol {
    private:
     std::shared_ptr<connection::Stream> stream_;
     std::vector<uint8_t> buf_;
+    kagome::common::Logger log_;
 
     void doRead();
 

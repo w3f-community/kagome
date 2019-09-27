@@ -30,10 +30,10 @@ TEST(Common, BufferPut) {
   b.putUint8(1);
   ASSERT_EQ(b.size(), 6);
 
-  b.putUint32(1);
+  b.putUint32BE(1);
   ASSERT_EQ(b.size(), 10);
 
-  b.putUint64(1);
+  b.putUint64BE(1);
   ASSERT_EQ(b.size(), 18);
 
   std::vector<uint8_t> e{1, 2, 3, 4, 5};

@@ -206,7 +206,7 @@ namespace libp2p::protocol {
     pubkey = std::move(pubkey_res.value());
 
     // derive a peer id from the received public key
-    auto msg_peer_id = peer::PeerId::fromPublicKey(*pubkey);
+    auto msg_peer_id = peer::PeerId::fromPublicKey(pubkey->data);
 
     auto &key_repo = host_.getPeerRepository().getKeyRepository();
     if (!stream_peer_id) {

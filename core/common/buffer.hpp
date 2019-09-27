@@ -117,18 +117,25 @@ namespace kagome::common {
     Buffer &putUint8(uint8_t n);
 
     /**
+     * @brief Put a 16-bit {@param n} in this buffer. Will be serialized
+     * as big-endian number.
+     * @return this buffer, suitable for chaining.
+     */
+    Buffer &putUint16BE(uint16_t n);
+
+    /**
      * @brief Put a 32-bit {@param n} number in this buffer. Will be serialized
      * as big-endian number.
      * @return this buffer, suitable for chaining.
      */
-    Buffer &putUint32(uint32_t n);
+    Buffer &putUint32BE(uint32_t n);
 
     /**
      * @brief Put a 64-bit {@param n} number in this buffer. Will be serialized
      * as big-endian number.
      * @return this buffer, suitable for chaining.
      */
-    Buffer &putUint64(uint64_t n);
+    Buffer &putUint64BE(uint64_t n);
 
     /**
      * @brief Put a string into byte buffer
