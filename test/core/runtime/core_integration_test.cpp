@@ -176,7 +176,7 @@ TEST_F(CoreTest, ConstructGenesisWithRealWasm) {
 
   auto block_builder =
       std::make_shared<BlockBuilderApiImpl>(wasm_provider_, extension_factory_);
-git chec  EXPECT_OUTCOME_TRUE_1(block_builder->apply_extrinsic(tx));
+  EXPECT_OUTCOME_TRUE_1(block_builder->apply_extrinsic(tx));
   EXPECT_OUTCOME_TRUE_1(block_builder->finalise_block());
 
   // execute the block

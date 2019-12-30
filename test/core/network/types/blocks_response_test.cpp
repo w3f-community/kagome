@@ -11,7 +11,7 @@
 #include "scale/scale.hpp"
 #include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
-#include "testutil/primitives/hash_creator.hpp"
+#include "testutil/primitives/util.hpp"
 
 using kagome::network::BlockData;
 using kagome::network::BlocksResponse;

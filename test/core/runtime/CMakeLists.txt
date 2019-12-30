@@ -24,6 +24,9 @@ addtest(core_integration_test
 target_link_libraries(core_integration_test
     core
     basic_wasm_provider
+    in_memory_storage
+    block_builder_api
+    configuration_storage
     extension_factory
     )
 

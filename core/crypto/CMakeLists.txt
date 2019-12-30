@@ -38,7 +38,7 @@ target_link_libraries(ed25519_types
 kagome_install(ed25519_types)
 
 add_library(crypto_util
-    hash_creator.cpp
+    util.cpp
     util.hpp
     )
 target_link_libraries(crypto_util

@@ -3,16 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef KAGOME_ORDERED_TRIE_HASH_HPP
-#define KAGOME_ORDERED_TRIE_HASH_HPP
+#ifndef KAGOME_CALCULATE_TREE_ROOT_HPP
+#define KAGOME_CALCULATE_TREE_ROOT_HPP
 
 #include "common/buffer.hpp"
 #include "crypto/hasher.hpp"
 #include "scale/scale.hpp"
+#include "storage/in_memory/in_memory_storage.hpp"
 #include "storage/trie/impl/polkadot_codec.hpp"
 #include "storage/trie/impl/polkadot_trie.hpp"
+#include "storage/trie/impl/polkadot_trie_db.hpp"
+#include "storage/trie/impl/polkadot_trie_db_backend.hpp"
 
 namespace kagome::storage::trie {
+
+  /**
+   * Instantiate empty merkle trie, insert \param key_vals pairs and \return
+   * Buffer containing merkle root of resulting trie
+   */
+  static outcome::result<common::Buffer> calculateTrieRoot(
+      const std::vector<std::pair<common::Buffer, common::Buffer>> &key_vals) {
+    auto trie_db = storage::trie::PolkadotTrieDb::createEmpty(
+        std::make_shared<storage::trie::PolkadotTrieDbBackend>(
+            std::make_shared<storage::InMemoryStorage>(),
+            common::Buffer{},
+            common::Buffer{0}));
+
+    for (const auto &[key, val] : key_vals) {
+      OUTCOME_TRY(trie_db->put(key, val));
+    }
+    return trie_db->getRootHash();
+  }
 
   /**
    * Calculates the hash of a Merkle tree containing the items from the provided
@@ -50,4 +71,4 @@ namespace kagome::storage::trie {
 
 }  // namespace kagome::storage::trie
 
-#endif  // KAGOME_ORDERED_TRIE_HASH_HPP
+#endif  // KAGOME_CALCULATE_TREE_ROOT_HPP

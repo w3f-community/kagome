@@ -7,6 +7,7 @@
 
 #include "blockchain/impl/persistent_map_util.hpp"
 #include "scale/scale.hpp"
+#include "storage/trie/impl/calculate_tree_root.hpp"
 
 OUTCOME_CPP_DEFINE_CATEGORY(kagome::blockchain,
                             KeyValueBlockStorage::Error,
@@ -47,7 +48,10 @@ namespace kagome::blockchain {
     OUTCOME_TRY(state_root_blob,
                 common::Hash256::fromSpan(state_root.toVector()));
 
-    auto extrinsics_root_buf = trieRoot({});
+    auto extrinsics_root_buf_res = storage::trie::calculateTrieRoot({});
+    BOOST_ASSERT_MSG(extrinsics_root_buf_res.has_value(),
+                     "Error inserting an extrinsic to the storage");
+    auto extrinsics_root_buf = extrinsics_root_buf_res.value();
     // same reason for conversion as few lines above
     OUTCOME_TRY(extrinsics_root,
                 common::Hash256::fromSpan(extrinsics_root_buf.toVector()));

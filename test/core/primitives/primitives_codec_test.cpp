@@ -25,7 +25,7 @@
 #include "scale/scale_error.hpp"
 #include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
-#include "testutil/primitives/hash_creator.hpp"
+#include "testutil/primitives/util.hpp"
 
 using kagome::common::Blob;
 using kagome::common::Buffer;
