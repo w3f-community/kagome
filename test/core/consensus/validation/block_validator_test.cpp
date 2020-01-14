@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "consensus/validation/babe_block_validator.hpp"
-
 #include <gtest/gtest.h>
+
+#include "consensus/validation/babe_block_validator.hpp"
 #include "crypto/random_generator/boost_generator.hpp"
 #include "crypto/sr25519/sr25519_provider_impl.hpp"
 #include "crypto/util.hpp"
@@ -16,7 +16,7 @@
 #include "mock/libp2p/crypto/random_generator_mock.hpp"
 #include "scale/scale.hpp"
 #include "testutil/outcome.hpp"
-#include "testutil/primitives/util.hpp"
+#include "testutil/primitives/hash_creator.hpp"
 
 using namespace kagome;
 using namespace blockchain;

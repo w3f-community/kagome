@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "testutil/primitives/util.hpp"
+#include "testutil/primitives/hash_creator.hpp"
 
 namespace testutil {
   kagome::common::Hash256 createHash256(std::initializer_list<uint8_t> bytes) {

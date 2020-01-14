@@ -4,13 +4,14 @@
  */
 #include "network/types/block_announce.hpp"
 
+#include <gmock/gmock.h>
+
 #include <iostream>
 
-#include <gmock/gmock.h>
 #include "scale/scale.hpp"
 #include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
-#include "testutil/primitives/util.hpp"
+#include "testutil/primitives/hash_creator.hpp"
 
 using kagome::common::Buffer;
 using kagome::common::Hash256;

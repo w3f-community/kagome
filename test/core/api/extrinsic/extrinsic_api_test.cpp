@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "api/extrinsic/impl/extrinsic_api_impl.hpp"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include "api/extrinsic/impl/extrinsic_api_impl.hpp"
 #include "common/blob.hpp"
 #include "mock/core/blockchain/block_tree_mock.hpp"
 #include "mock/core/crypto/hasher_mock.hpp"
@@ -16,7 +16,7 @@
 #include "primitives/transaction.hpp"
 #include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
-#include "testutil/primitives/util.hpp"
+#include "testutil/primitives/hash_creator.hpp"
 #include "transaction_pool/transaction_pool_error.hpp"
 
 using namespace kagome::api;

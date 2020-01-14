@@ -7,6 +7,7 @@
 
 #include <boost/variant.hpp>
 #include <outcome/outcome.hpp>
+
 #include "common/blob.hpp"
 #include "common/buffer.hpp"
 #include "common/visitor.hpp"
@@ -25,7 +26,7 @@
 #include "scale/scale_error.hpp"
 #include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
-#include "testutil/primitives/util.hpp"
+#include "testutil/primitives/hash_creator.hpp"
 
 using kagome::common::Blob;
 using kagome::common::Buffer;
