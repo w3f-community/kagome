@@ -3,26 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "runtime/binaryen/runtime_api/core_impl.hpp"
+
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 
 #include "core/runtime/runtime_test.hpp"
-#include "crypto/hasher/hasher_impl.hpp"
-#include "crypto/random_generator/boost_generator.hpp"
+#include "core/storage/trie/mock_trie_db.hpp"
 #include "extensions/impl/extension_factory_impl.hpp"
-#include "runtime/impl/core_impl.hpp"
+#include "runtime/binaryen/wasm_memory_impl.hpp"
+#include "testutil/outcome.hpp"
 
 using kagome::common::Buffer;
-using kagome::crypto::BoostRandomGenerator;
 using kagome::extensions::ExtensionFactoryImpl;
 using kagome::primitives::Block;
 using kagome::primitives::BlockHeader;
 using kagome::primitives::BlockId;
 using kagome::primitives::BlockNumber;
 using kagome::primitives::Extrinsic;
-using kagome::runtime::CoreImpl;
+using kagome::runtime::binaryen::CoreImpl;
 using kagome::runtime::WasmMemory;
-using kagome::scale::encode;
+using kagome::runtime::binaryen::WasmMemoryImpl;
 using kagome::storage::trie::MockTrieDb;
 
 using ::testing::_;
@@ -34,13 +35,6 @@ class CoreTest : public RuntimeTest {
  public:
   void SetUp() override {
     RuntimeTest::SetUp();
-
-    extension_factory_ =
-        std::make_shared<kagome::extensions::ExtensionFactoryImpl>(trie_db_);
-    std::string wasm_path =
-        boost::filesystem::path(__FILE__).parent_path().string()
-        + "/wasm/polkadot_runtime.compact.wasm";
-    wasm_provider_ = std::make_shared<test::BasicWasmProvider>(wasm_path);
 
     core_ = std::make_shared<CoreImpl>(wasm_provider_, extension_factory_);
   }
