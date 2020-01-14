@@ -1,3 +1,10 @@
+add_library(genesis_config
+    genesis_config.hpp
+    )
+target_link_libraries(genesis_config
+    crypto_util
+    )
+
 add_library(config_reader_error
     impl/config_reader/error.cpp
     impl/config_reader/error.hpp

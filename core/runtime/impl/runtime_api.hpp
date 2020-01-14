@@ -69,7 +69,7 @@ namespace kagome::runtime {
         WasmResult r{res.geti64()};
         auto buffer = memory->loadN(r.address, r.length);
         // TODO (yuraz) PRE-98: after check for memory overflow is done,
-        //  refactor it
+        // refactor it
         return scale::decode<R>(buffer);
       }
 

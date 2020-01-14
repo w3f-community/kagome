@@ -148,7 +148,7 @@ namespace kagome::runtime {
         auto res =
             extension_->ext_storage_changes_root(arguments.at(0).geti32(),
                                                  arguments.at(1).geti32(),
-                                                 arguments.at(2).geti32(),
+                                                 arguments.at(2).geti64(),
                                                  arguments.at(3).geti32());
         return wasm::Literal(res);
       }

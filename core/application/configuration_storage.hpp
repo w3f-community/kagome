@@ -7,7 +7,8 @@
 #define KAGOME_CONFIGURATION_STORAGE_HPP
 
 #include <libp2p/peer/peer_info.hpp>
-#include "application/genesis_raw_config.hpp"
+
+#include "application/genesis_config.hpp"
 #include "crypto/ed25519_types.hpp"
 #include "crypto/sr25519_types.hpp"
 #include "network/types/peer_list.hpp"

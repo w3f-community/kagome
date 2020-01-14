@@ -30,6 +30,20 @@ target_link_libraries(core_integration_test
     extension_factory
     )
 
+addtest(runtime_integration_test
+    runtime_integration_test.cpp
+    )
+target_link_libraries(runtime_integration_test
+    core
+    basic_wasm_provider
+    in_memory_storage
+    block_builder_api
+    configuration_storage
+    extension_factory
+    genesis_config
+    storage_wasm_provider
+    )
+
 addtest(tagged_transaction_queue_test
     tagged_transaction_queue_test.cpp
     )

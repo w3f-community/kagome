@@ -31,6 +31,22 @@ namespace kagome::crypto::util {
     }
   }  // namespace detail
 
+  std::array<uint8_t, 4> uint32_t_to_bytes(uint32_t number) {
+    std::array<uint8_t, 4> result{};
+    for (auto i = 0; i < 4; ++i) {
+      gsl::at(result, i) = static_cast<uint8_t>((number >> 8 * (7 - i)) & 0xFF);
+    }
+    return result;
+  }
+
+  uint32_t bytes_to_uint32_t(gsl::span<uint8_t, 4> bytes) {
+    uint32_t result{0};
+    for (auto i = 0; i < 4; ++i) {
+      result |= static_cast<uint64_t>(bytes[i]) << (i * 8);
+    }
+    return result;
+  }
+
   std::array<uint8_t, 8> uint64_t_to_bytes(uint64_t number) {
     std::array<uint8_t, 8> result{};
     for (auto i = 0; i < 8; ++i) {
