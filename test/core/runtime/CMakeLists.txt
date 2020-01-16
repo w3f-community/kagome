@@ -33,10 +33,10 @@ addtest(runtime_integration_test
     runtime_integration_test.cpp
     )
 target_link_libraries(runtime_integration_test
-    core
+    binaryen_core_api
     basic_wasm_provider
     in_memory_storage
-    block_builder_api
+    binaryen_block_builder_api
     configuration_storage
     extension_factory
     genesis_config

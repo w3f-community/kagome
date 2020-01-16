@@ -2,7 +2,7 @@
  * Copyright Soramitsu Co., Ltd. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-#define WASM_INTERPRETER_DEBUG
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -14,15 +14,16 @@
 #include "crypto/random_generator/boost_generator.hpp"
 #include "crypto/sr25519/sr25519_provider_impl.hpp"
 #include "extensions/impl/extension_factory_impl.hpp"
-#include "runtime/impl/block_builder_api_impl.hpp"
-#include "runtime/impl/core_impl.hpp"
-#include "runtime/impl/storage_wasm_provider.hpp"
-#include "runtime/impl/wasm_memory_impl.hpp"
+#include "runtime/binaryen/runtime_api/block_builder_impl.hpp"
+#include "runtime/binaryen/runtime_api/core_impl.hpp"
+#include "runtime/binaryen/wasm_memory_impl.hpp"
+#include "runtime/common/storage_wasm_provider.hpp"
 #include "storage/trie/impl/calculate_tree_root.hpp"
 #include "storage/trie/impl/polkadot_trie_db.hpp"
 #include "storage/trie/impl/polkadot_trie_db_backend.hpp"
 #include "testutil/literals.hpp"
 #include "testutil/outcome.hpp"
+#include "testutil/runtime/common/basic_wasm_provider.hpp"
 
 using kagome::application::ConfigurationStorage;
 using kagome::application::ConfigurationStorageImpl;
@@ -39,10 +40,10 @@ using kagome::primitives::Digest;
 using kagome::primitives::DigestItem;
 using kagome::primitives::DigestType;
 using kagome::primitives::Extrinsic;
-using kagome::runtime::BlockBuilderApiImpl;
-using kagome::runtime::CoreImpl;
 using kagome::runtime::WasmMemory;
-using kagome::runtime::WasmMemoryImpl;
+using kagome::runtime::binaryen::BlockBuilderImpl;
+using kagome::runtime::binaryen::CoreImpl;
+using kagome::runtime::binaryen::WasmMemoryImpl;
 using kagome::scale::encode;
 using kagome::storage::trie::calculateOrderedTrieHash;
 using kagome::storage::trie::calculateTrieRoot;
@@ -70,7 +71,7 @@ const auto ACCOUNT_2 =
                       79,  150, 216, 24, 128, 46,  126, 158, 12,  13,  27,
                       124, 154, 203, 60, 114, 107, 8,   14,  122, 3}};
 
- class RuntimeIntegrationTest: public testing::Test {
+class RuntimeIntegrationTest : public testing::Test {
  public:
 };
 
@@ -95,7 +96,9 @@ TEST_F(RuntimeIntegrationTest, ConstructGenesisWithRealWasm) {
   EXPECT_OUTCOME_TRUE(
       raw_config,
       kagome::application::GenesisConfigEncoder(
-          test::BasicWasmProvider(wasm_path).getStateCode(), hasher)
+          kagome::runtime::BasicWasmProvider(wasm_path)
+              .getStateCode(),
+          hasher)
           .encodeToRaw(genesis_config));
   for (auto &&[k, v] : raw_config) {
     EXPECT_OUTCOME_TRUE_1(trie_db->put(k, v));
@@ -138,9 +141,9 @@ TEST_F(RuntimeIntegrationTest, ConstructGenesisWithRealWasm) {
   EXPECT_OUTCOME_TRUE_1(core->initialise_block(block1.header));
 
   auto block_builder =
-      std::make_shared<BlockBuilderApiImpl>(wasm_provider, extension_factory);
+      std::make_shared<BlockBuilderImpl>(wasm_provider, extension_factory);
 
-  EXPECT_OUTCOME_TRUE_1(block_builder->finalise_block());
-
-  //EXPECT_OUTCOME_TRUE_1(core->execute_block(block1));
+  EXPECT_OUTCOME_TRUE(r, block_builder->finalise_block());
+  ASSERT_EQ(r.number, 0);
+  // EXPECT_OUTCOME_TRUE_1(core->execute_block(block1));
 }
