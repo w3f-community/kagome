@@ -144,6 +144,7 @@ TEST_F(RuntimeIntegrationTest, ConstructGenesisWithRealWasm) {
       std::make_shared<BlockBuilderImpl>(wasm_provider, extension_factory);
 
   EXPECT_OUTCOME_TRUE(r, block_builder->finalise_block());
-  ASSERT_EQ(r.number, 0);
-  // EXPECT_OUTCOME_TRUE_1(core->execute_block(block1));
+  ASSERT_EQ(r.number, 1);
+  // TODO(Harrm) fix it
+  //  EXPECT_OUTCOME_TRUE_1(core->execute_block(block1));
 }
