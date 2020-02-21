@@ -5,7 +5,7 @@
 
 #include "blockchain/impl/key_value_block_storage.hpp"
 
-#include "blockchain/impl/persistent_map_util.hpp"
+#include "blockchain/impl/storage_util.hpp"
 #include "scale/scale.hpp"
 
 OUTCOME_CPP_DEFINE_CATEGORY(kagome::blockchain,
@@ -28,7 +28,7 @@ namespace kagome::blockchain {
   using Prefix = prefix::Prefix;
 
   KeyValueBlockStorage::KeyValueBlockStorage(
-      std::shared_ptr<storage::PersistentBufferMap> storage,
+      std::shared_ptr<storage::BufferStorage> storage,
       std::shared_ptr<crypto::Hasher> hasher)
       : storage_{std::move(storage)},
         hasher_{std::move(hasher)},
@@ -37,8 +37,9 @@ namespace kagome::blockchain {
   outcome::result<std::shared_ptr<KeyValueBlockStorage>>
   KeyValueBlockStorage::createWithGenesis(
       common::Buffer state_root,
-      const std::shared_ptr<storage::PersistentBufferMap> &storage,
-      std::shared_ptr<crypto::Hasher> hasher) {
+      const std::shared_ptr<storage::BufferStorage> &storage,
+      std::shared_ptr<crypto::Hasher> hasher,
+      const GenesisHandler &on_genesis_created) {
     KeyValueBlockStorage block_storage(storage, std::move(hasher));
     // TODO(Harrm) check that storage is actually empty
 
@@ -60,6 +61,7 @@ namespace kagome::blockchain {
     // the rest of the fields have default value
 
     OUTCOME_TRY(block_storage.putBlock(genesis_block));
+    on_genesis_created(genesis_block);
     return std::make_shared<KeyValueBlockStorage>(block_storage);
   }
 

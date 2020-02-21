@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "blockchain/impl/block_tree_impl.hpp"
-
 #include <gtest/gtest.h>
+
 #include "blockchain/block_tree_error.hpp"
-#include "blockchain/impl/persistent_map_util.hpp"
+#include "blockchain/impl/block_tree_impl.hpp"
+#include "blockchain/impl/storage_util.hpp"
 #include "common/blob.hpp"
 #include "common/buffer.hpp"
 #include "crypto/hasher/hasher_impl.hpp"
@@ -69,6 +69,8 @@ struct BlockTreeTest : public testing::Test {
 
   const BlockHash kFinalizedBlockHash =
       BlockHash::fromString("andj4kdn4odnfkslfn3k4jdnbmeodkv4").value();
+
+  const BlockInfo kFinalizedBlockInfo{42ul, kFinalizedBlockHash};
 
   std::shared_ptr<HeaderRepositoryMock> header_repo_ =
       std::make_shared<HeaderRepositoryMock>();
@@ -168,7 +170,7 @@ TEST_F(BlockTreeTest, AddBlockNoParent) {
  */
 TEST_F(BlockTreeTest, Finalize) {
   // GIVEN
-  auto &&last_finalized_hash = block_tree_->getLastFinalized();
+  auto &&last_finalized_hash = block_tree_->getLastFinalized().block_hash;
   ASSERT_EQ(last_finalized_hash, kFinalizedBlockHash);
 
   BlockHeader header{.parent_hash = kFinalizedBlockHash,
@@ -187,7 +189,7 @@ TEST_F(BlockTreeTest, Finalize) {
   ASSERT_TRUE(block_tree_->finalize(hash, justification));
 
   // THEN
-  ASSERT_EQ(block_tree_->getLastFinalized(), hash);
+  ASSERT_EQ(block_tree_->getLastFinalized().block_hash, hash);
 }
 
 /**
@@ -289,8 +291,7 @@ TEST_F(BlockTreeTest, GetChainByBlockDescending) {
 /**
  * @given a block tree with one block in it
  * @when trying to obtain the best chain that contais a block, which is
- present
- * in the storage, but is not connected to the base block in the tree
+ * present in the storage, but is not connected to the base block in the tree
  * @then BLOCK_NOT_FOUND error is returned
  */
 TEST_F(BlockTreeTest, GetBestChain_BlockNotFound) {
