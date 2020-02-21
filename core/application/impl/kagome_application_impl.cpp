@@ -26,6 +26,7 @@ namespace kagome::application {
     key_storage_ = injector_.create<sptr<KeyStorage>>();
     clock_ = injector_.create<sptr<clock::SystemClock>>();
     extrinsic_api_service_ = injector_.create<sptr<ExtrinsicApiService>>();
+    auto a = injector_.create<sptr<consensus::EpochStorage>>();
     babe_ = injector_.create<sptr<Babe>>();
     grandpa_launcher_ = injector_.create<sptr<GrandpaLauncher>>();
     router_ = injector_.create<sptr<network::Router>>();

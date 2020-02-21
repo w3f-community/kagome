@@ -8,8 +8,8 @@
 
 #include <memory>
 
-#include "consensus/babe.hpp"
 #include "consensus/babe/epoch_storage.hpp"
+#include "runtime/babe_api.hpp"
 
 namespace kagome::consensus {
   /**
@@ -18,15 +18,15 @@ namespace kagome::consensus {
    */
   class EpochStorageDumb : public EpochStorage {
    public:
-    explicit EpochStorageDumb(std::shared_ptr<Babe> babe);
+    explicit EpochStorageDumb(std::shared_ptr<runtime::BabeApi> babe_api);
 
     ~EpochStorageDumb() override = default;
 
-    boost::optional<Epoch> getEpoch(
+    boost::optional<primitives::BabeConfiguration> getEpoch(
         const primitives::BlockId &block_id) const override;
 
    private:
-    std::shared_ptr<Babe> babe_;
+    std::shared_ptr<runtime::BabeApi> babe_api_;
   };
 }  // namespace kagome::consensus
 

@@ -54,6 +54,7 @@
 #include "network/impl/router_libp2p.hpp"
 #include "network/sync_protocol_client.hpp"
 #include "network/sync_protocol_observer.hpp"
+#include "runtime/binaryen/runtime_api/babe_api_impl.hpp"
 #include "runtime/binaryen/runtime_api/block_builder_impl.hpp"
 #include "runtime/binaryen/runtime_api/core_impl.hpp"
 #include "runtime/binaryen/runtime_api/grandpa_impl.hpp"
@@ -587,6 +588,7 @@ namespace kagome::injector {
         di::bind<network::SyncClientsSet>.to(std::move(get_sync_clients_set)),
         di::bind<network::SyncProtocolClient>.template to<consensus::SynchronizerImpl>(),
         di::bind<network::SyncProtocolObserver>.template to<consensus::SynchronizerImpl>(),
+        di::bind<runtime::BabeApi>.template to<runtime::binaryen::BabeApiImpl>(),
         di::bind<runtime::TaggedTransactionQueue>.template to<runtime::binaryen::TaggedTransactionQueueImpl>(),
         di::bind<runtime::ParachainHost>.template to<runtime::binaryen::ParachainHostImpl>(),
         di::bind<runtime::OffchainWorker>.template to<runtime::binaryen::OffchainWorkerImpl>(),
