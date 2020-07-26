@@ -4,6 +4,7 @@
 #
 
 add_subdirectory(types)
+add_subdirectory(sync)
 
 addtest(rpc_libp2p_test
     rpc_libp2p_test.cpp
