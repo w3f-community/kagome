@@ -17,6 +17,7 @@ set(
 
 include("cmake/Hunter/init.cmake")
 
+cmake_policy(SET CMP0048 NEW)
 PROJECT(kagome VERSION 0.0.1.20200728 LANGUAGES C CXX)
 
 include(cmake/print.cmake)
