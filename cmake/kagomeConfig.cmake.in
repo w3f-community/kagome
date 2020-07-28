@@ -28,7 +28,6 @@ set(kagome_LIBRARIES
         kagome::twox
         kagome::sha
         kagome::leveldb
-        kagome::polkadot_trie_batch
         kagome::logger
         kagome::in_memory_storage
         kagome::extensions
@@ -42,5 +41,4 @@ set(kagome_LIBRARIES
         kagome::ed25519_types
         kagome::sr25519_provider
         kagome::ed25519_provider
-        kagome::trie_db_backend
     )
