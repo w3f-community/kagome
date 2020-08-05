@@ -33,7 +33,7 @@ TEST(Syncing, SyncTest) {
   // operations
 
   auto server_ma_res = libp2p::multi::Multiaddress::create(
-      "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWNoMM7DGZZiEoeTYmcmFMW16Xr3dfs2tbjE7GJdXgeeSb");  // NOLINT
+      "/ip4/127.0.0.1/tcp/30333");///p2p/12D3KooWNoMM7DGZZiEoeTYmcmFMW16Xr3dfs2tbjE7GJdXgeeSb");  // NOLINT
   if (!server_ma_res) {
     std::cerr << "unable to create server multiaddress: "
               << server_ma_res.error().message() << std::endl;
@@ -73,13 +73,13 @@ TEST(Syncing, SyncTest) {
         });
   });
 
-  host->newStream(peer_info, "/ipfs/id/push/1.0.0", [&](auto &&stream_res) {
+  /*host->newStream(peer_info, "/ipfs/id/push/1.0.0", [&](auto &&stream_res) {
     if (!stream_res)
       FAIL() << "Cannot connect to server: " << stream_res.error().message();
 
     std::cerr << "Connected" << std::endl;
     // network:
-  });
+  });*/
 
   // create Host object and open a stream through it
   host->newStream(peer_info, "/sup/sync/2", [&](auto &&stream_res) {
@@ -98,13 +98,13 @@ TEST(Syncing, SyncTest) {
                     [request_buf, stream_p](auto &&write_res) {
                       ASSERT_TRUE(write_res) << write_res.error().message();
                       ASSERT_EQ(request_buf.size(), write_res.value());
-                      /*            std::vector<uint8_t> read_buf{};
-                                  read_buf.resize(1024*1024);
-                                  stream_p->read(read_buf, read_buf.size(),
-                         [read_buf](auto&& read_res){ ASSERT_TRUE(read_res) <<
-                         read_res.error().message(); FAIL() <<
-                         common::Buffer(read_buf).toHex();
-                                  });*/
+                      /*std::vector<uint8_t> read_buf{};
+                      read_buf.resize(1024 * 1024);
+                      stream_p->read(
+                          read_buf, read_buf.size(), [read_buf](auto &&read_res)
+                      { ASSERT_TRUE(read_res) << read_res.error().message();
+                            FAIL() << common::Buffer(read_buf).toHex();
+                          });*/
                     });
 
     std::vector<uint8_t> read_buf{};
@@ -117,13 +117,14 @@ TEST(Syncing, SyncTest) {
   });
 
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
-  context->post([host{std::move(host)}, server_ma{std::move(server_ma)}] {  // NOLINT
+  context->post([host{std::move(host)},
+                 server_ma{std::move(server_ma)}] {  // NOLINT
     // host->setProtocolHandler()
     // libp2p::protocol::
 
-/*    auto ma =
-        libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40010").value();*/
-    auto listen_res = host->listen(server_ma);
+    auto ma =
+        libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40010").value();
+    auto listen_res = host->listen(ma);
     if (!listen_res) {
       std::cerr << "host cannot listen the given multiaddress: "
                 << listen_res.error().message() << "\n";
@@ -131,6 +132,11 @@ TEST(Syncing, SyncTest) {
     }
 
     host->start();
+    std::cout << "Server started\nListening on: " << ma.getStringAddress()
+              << "\nPeer id: " << host->getPeerInfo().id.toBase58()
+              << std::endl;
+    std::cout << "Connection string: " << ma.getStringAddress() << "/ipfs/"
+              << host->getPeerInfo().id.toBase58() << std::endl;
 
     //
     //          auto echo_client = echo.createClient(stream_p);
