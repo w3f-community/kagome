@@ -29,6 +29,10 @@ auto prepareBlockRequest() {
 TEST(Syncing, SyncTest) {
   auto injector = libp2p::injector::makeHostInjector();
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
+
+  auto identify = injector.create<std::shared_ptr<libp2p::protocol::Identify>>();
+  identify->start();
+
   // create io_context - in fact, thing, which allows us to execute async
   // operations
   auto context = injector.create<std::shared_ptr<boost::asio::io_context>>();
@@ -115,6 +119,12 @@ TEST(Syncing, SyncTest) {
       });
 
       //strcpy((char*)&request_buf[0], "Hello!!!!!");
+
+      std::cerr << std::endl;
+      for (auto b : request_buf) {
+        std::cerr << "0x" << std::hex << static_cast<int>(b) << ", ";
+      }
+
       stream_p->write(
           request_buf,
           request_buf.size(),
