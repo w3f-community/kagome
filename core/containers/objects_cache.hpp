@@ -15,10 +15,6 @@ namespace tools::containers {
   template <typename Type>
   struct ObjsCacheDefAlloc {
     template <typename... __args>
-    Type *allocate(__args &... args) {
-      return new (std::nothrow) Type(args...);
-    }
-    template <typename... __args>
     Type *allocate(__args &&... args) {
       return new (std::nothrow) Type(std::forward<__args>(args)...);
     }
@@ -59,14 +55,8 @@ namespace tools::containers {
     }
 
     ObjectPtr getSharedCachedObject() {
-      return ObjectPtr(
-          getRawPtr(),
-          [wself{this->weak_from_this()}, alloc{allocator_}](auto *obj) {
-            if (auto self = wself.lock())
-              self->setRawPtr(obj);
-            else
-              alloc.deallocate(obj);
-          });
+      return ObjectPtr(getRawPtr(),
+                       [this](auto *obj) mutable { setRawPtr(obj); });
     }
 
    private:
@@ -116,15 +106,16 @@ namespace tools::containers {
 #ifndef KAGOME_DECLARE_CACHE
 #define KAGOME_DECLARE_CACHE(prefix, ...) \
         using prefix##_cache_type = tools::containers::ObjectsCacheManager<__VA_ARGS__>; \
-        extern prefix##_cache_type prefix##_cache; \
+        using prefix##_cache_type_ptr = std::shared_ptr<prefix##_cache_type>; \
+        extern prefix##_cache_type_ptr prefix##_cache; \
         template <typename T> inline T *prefix##_get_from_cache() { \
-            return static_cast<tools::containers::ObjectsCache<T> *>(&prefix##_cache)->getCachedObject(); \
+            return static_cast<std::shared_ptr<tools::containers::ObjectsCache<T>>>(prefix##_cache)->getCachedObject(); \
         } \
         template <typename T> inline void prefix##_set_to_cache(T *const ptr) { \
-            static_cast<tools::containers::ObjectsCache<T> *>(&prefix##_cache)->setCachedObject(ptr); \
+            static_cast<std::shared_ptr<tools::containers::ObjectsCache<T>>>(prefix##_cache)->setCachedObject(ptr); \
         } \
         template <typename T> inline std::shared_ptr<T> prefix##_get_shared_from_cache() { \
-            return static_cast<tools::containers::ObjectsCache<T> *>(&prefix##_cache)->getSharedCachedObject(); \
+            return static_cast<std::shared_ptr<tools::containers::ObjectsCache<T>>>(prefix##_cache)->getSharedCachedObject(); \
         } \
         template <typename T> inline std::unique_ptr<T, void (*)(T *const)> prefix##_get_unique_from_cache() { \
             return std::unique_ptr<T, void (*)(T *const)>(prefix##_get_from_cache<T>(), &prefix##_set_to_cache<T>); \
@@ -132,7 +123,7 @@ namespace tools::containers {
 #endif  // KAGOME_DECLARE_CACHE
 
 #ifndef KAGOME_DEFINE_EXTERN_CACHE
-#define KAGOME_DEFINE_EXTERN_CACHE(prefix) prefix##_cache_type prefix##_cache;
+#define KAGOME_DEFINE_EXTERN_CACHE(prefix) prefix##_cache_type_ptr prefix##_cache = std::make_shared<prefix##_cache_type>();
 #endif  // KAGOME_DEFINE_EXTERN_CACHE
 
 #ifndef KAGOME_EXTRACT_SHARED_CACHE
