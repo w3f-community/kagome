@@ -27,10 +27,8 @@ namespace tools::containers {
     }
   };
 
-  template <uint32_t kMaxObjectsCount,
-            typename T,
-            typename Alloc = ObjsCacheDefAlloc<T>>
-  struct ObjectsCache : std::enable_shared_from_this<ObjectsCache<kMaxObjectsCount, T, Alloc>> {
+  template <typename T, typename Alloc = ObjsCacheDefAlloc<T>>
+  struct ObjectsCache : std::enable_shared_from_this<ObjectsCache<T, Alloc>> {
     static_assert(std::is_array<T>::value == false,
                   "array can not be used such way");
 
@@ -61,13 +59,14 @@ namespace tools::containers {
     }
 
     ObjectPtr getSharedCachedObject() {
-      return ObjectPtr(getRawPtr(),
-                       [wself{this->weak_from_this()}, alloc{allocator_}](auto *obj) {
-                         if (auto self = wself.lock())
-                           self->setRawPtr(obj);
-                         else
-                           alloc.deallocate(obj);
-                       });
+      return ObjectPtr(
+          getRawPtr(),
+          [wself{this->weak_from_this()}, alloc{allocator_}](auto *obj) {
+            if (auto self = wself.lock())
+              self->setRawPtr(obj);
+            else
+              alloc.deallocate(obj);
+          });
     }
 
    private:
@@ -92,44 +91,40 @@ namespace tools::containers {
     inline void setRawPtr(Type *const ptr) {
       if (nullptr != ptr) {
         std::lock_guard guard(cache_blocker_);
-        if (cache_.size() < kMaxObjectsCount) {
-          cache_.push_back(ptr);
-        } else {
-          allocator_.deallocate(ptr);
-        }
+        cache_.push_back(ptr);
       }
     }
   };
 
-  template <typename T, uint32_t kMaxObjectsCount>
+  template <typename T>
   struct CacheUnit {
-    static constexpr uint32_t count = kMaxObjectsCount;
-    using Type = typename std::remove_pointer<typename std::decay<T>::type>::type;
+    using Type =
+        typename std::remove_pointer<typename std::decay<T>::type>::type;
   };
 
   template <typename T, typename... ARGS>
-  struct ObjectsCacheManager : public ObjectsCache<T::count, typename T::Type>,
+  struct ObjectsCacheManager : public ObjectsCache<typename T::Type>,
                                public ObjectsCacheManager<ARGS...> {};
 
   template <typename T>
-  struct ObjectsCacheManager<T> : public ObjectsCache<T::count, typename T::Type> {};
+  struct ObjectsCacheManager<T> : public ObjectsCache<typename T::Type> {};
 
 #ifndef KAGOME_CACHE_UNIT
-#define KAGOME_CACHE_UNIT(type, count) CacheUnit<type, count>
+#define KAGOME_CACHE_UNIT(type) tools::containers::CacheUnit<type>
 #endif  // KAGOME_CACHE_UNIT
 
 #ifndef KAGOME_DECLARE_CACHE
 #define KAGOME_DECLARE_CACHE(prefix, ...) \
-        using prefix##_cache_type = tools::ObjectsCacheManager<__VA_ARGS__>; \
+        using prefix##_cache_type = tools::containers::ObjectsCacheManager<__VA_ARGS__>; \
         extern prefix##_cache_type prefix##_cache; \
         template <typename T> inline T *prefix##_get_from_cache() { \
-            return static_cast<tools::ObjectsCache<size, T> *>(&prefix##_cache)->getCachedObject(); \
+            return static_cast<tools::containers::ObjectsCache<T> *>(&prefix##_cache)->getCachedObject(); \
         } \
         template <typename T> inline void prefix##_set_to_cache(T *const ptr) { \
-            static_cast<tools::ObjectsCache<size, T> *>(&prefix##_cache)->setCachedObject(ptr); \
+            static_cast<tools::containers::ObjectsCache<T> *>(&prefix##_cache)->setCachedObject(ptr); \
         } \
         template <typename T> inline std::shared_ptr<T> prefix##_get_shared_from_cache() { \
-            return static_cast<tools::ObjectsCache<size, T> *>(&prefix##_cache)->getSharedCachedObject(); \
+            return static_cast<tools::containers::ObjectsCache<T> *>(&prefix##_cache)->getSharedCachedObject(); \
         } \
         template <typename T> inline std::unique_ptr<T, void (*)(T *const)> prefix##_get_unique_from_cache() { \
             return std::unique_ptr<T, void (*)(T *const)>(prefix##_get_from_cache<T>(), &prefix##_set_to_cache<T>); \
