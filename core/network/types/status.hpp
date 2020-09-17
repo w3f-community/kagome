@@ -81,12 +81,13 @@ namespace kagome::network {
    */
   template <class Stream,
             typename = std::enable_if_t<Stream::is_encoder_stream>>
-  Stream &operator<<(Stream &s, const BlocksRequest &v) {
-    return s << v.id << v.fields << v.from << v.to << v.direction << v.max;
+  Stream &operator<<(Stream &s, const Status &v) {
+    return s << v.version << v.min_supported_version << v.roles << v.best_number
+             << v.best_hash << v.genesis_hash << v.chain_status;
   }
 
   /**
-   * @brief decodes object of type BlockRequest from stream
+   * @brief decodes object of type Status from stream
    * @tparam Stream input stream type
    * @param s stream reference
    * @param v value to decode
@@ -94,8 +95,9 @@ namespace kagome::network {
    */
   template <class Stream,
             typename = std::enable_if_t<Stream::is_decoder_stream>>
-  Stream &operator>>(Stream &s, BlocksRequest &v) {
-    return s >> v.id >> v.fields >> v.from >> v.to >> v.direction >> v.max;
+  Stream &operator>>(Stream &s, Status &v) {
+    return s >> v.version >> v.min_supported_version >> v.roles >> v.best_number
+           >> v.best_hash >> v.genesis_hash >> v.chain_status;
   }
 
 }  // namespace kagome::network
