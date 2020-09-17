@@ -128,20 +128,22 @@ TEST(Syncing, SyncTest) {
 
         });*/
 
-    //targetPeerAddr, _ := ma.NewMultiaddr(fmt.Sprintf("/ipfs/%s", pid))
-    //targetAddr := ipfsaddr.Decapsulate(targetPeerAddr)
+    // targetPeerAddr, _ := ma.NewMultiaddr(fmt.Sprintf("/ipfs/%s", pid))
+    // targetAddr := ipfsaddr.Decapsulate(targetPeerAddr)
 
     // We have a peer ID and a targetAddr so we add it to the peerstore
     // so LibP2P knows how to contact it
-    //ha.Peerstore().AddAddr(peerid, targetAddr, peerstore.PermanentAddrTTL)
+    // ha.Peerstore().AddAddr(peerid, targetAddr, peerstore.PermanentAddrTTL)
 
     host->getPeerRepository().getAddressRepository().addAddresses(
-        server_peer_id, gsl::span<const libp2p::multi::Multiaddress>(&server_ma, 1), libp2p::peer::ttl::kPermanent);
+        server_peer_id,
+        gsl::span<const libp2p::multi::Multiaddress>(&server_ma, 1),
+        libp2p::peer::ttl::kPermanent);
 
-/*    host->newStream(peer_info, "/ipfs/id/1.0.0",
-        [&identify](auto &&stream_res) {
-          identify->handle(std::move(stream_res));
-        });*/
+    /*    host->newStream(peer_info, "/ipfs/id/1.0.0",
+            [&identify](auto &&stream_res) {
+              identify->handle(std::move(stream_res));
+            });*/
 
     auto ma =
         libp2p::multi::Multiaddress::create("/ip4/127.0.0.1/tcp/40010").value();
@@ -154,129 +156,34 @@ TEST(Syncing, SyncTest) {
 
     host->start();
 
-    host->newStream(peer_info, "/sup/sync/2", [&](auto &&stream_res) {
-      if (!stream_res) {
-        FAIL() << "Cannot connect to server: " << stream_res.error().message();
-      }
+    host->newStream(peer_info, "/substrate/sup/6", [&](auto &&ss) {
+      if (!ss)
+        FAIL() << "Cannot connect to server: " << ss.error().message();
+
       std::cerr << "Connected" << std::endl;
+      std::vector<uint8_t> rr = {
+          0,   6,   0,   0,   0,   3,   0,   0,   0,   4,   0,   0,   0,   0,
+          102, 17,  221, 133, 84,  21,  109, 36,  168, 197, 227, 165, 113, 47,
+          246, 131, 108, 101, 146, 68,  122, 9,   176, 220, 143, 101, 136, 40,
+          13,  143, 111, 255, 102, 17,  221, 133, 84,  21,  109, 36,  168, 197,
+          227, 165, 113, 47,  246, 131, 108, 101, 146, 68,  122, 9,   176, 220,
+          143, 101, 136, 40,  13,  143, 111, 255, 0};
 
-      auto request = prepareBlockRequest();
-      std::vector<uint8_t> request_buf;
-
-      using ProtobufRW = network::MessageReadWriter<network::ProtobufMessageAdapter<network::BlocksRequest>, network::NoSink>;
-      auto it = ProtobufRW::write(request, request_buf);
-
-      gsl::span<uint8_t> data(it.base(),
-                              request_buf.size() - std::distance(request_buf.begin(), it));
-      assert(!data.empty());
-
-/*      std::vector<uint8_t> request_buf = {
-          44, 8, 128, 128, 128, 152, 1, 18, 32, 52,
-          189, 238, 44, 52, 228, 153, 78, 3, 11,
-          253, 252, 168, 165, 91, 172, 110, 34,
-          30, 172, 203, 223, 102, 173, 232, 127,
-          77, 55, 193, 186, 63, 222, 40, 1, 48, 1
-      };*/
-      auto stream_p = std::move(stream_res.value());
-      ASSERT_FALSE(stream_p->isClosedForWrite());
-
-      auto rw = std::make_shared<libp2p::basic::MessageReadWriterUvarint>(stream_p);
-      rw->write(data, [](auto res) {
-
+      auto ssp = std::move(ss.value());
+      auto rw = std::make_shared<libp2p::basic::MessageReadWriterUvarint>(ssp);
+      rw->write(rr, [](auto write_res) {
+        ASSERT_TRUE(write_res) << write_res.error().message();
       });
-
-/*      stream_p->write(
-          request_buf,
-          request_buf.size(),
-          [request_buf, stream_p](auto &&write_res) {
-            stream_p->close([stream_p{std::move(stream_p)}] (auto res) {
-              std::vector<uint8_t> read_buf{};
-              read_buf.resize(10);
-              stream_p->read(read_buf, 10, [read_buf, stream_p](auto &&read_res) {
-                FAIL() << "Read res: " << read_res.error().message();
-                ASSERT_TRUE(read_res) << read_res.error().message();
-              });
-            });
-          });*/
-
-      //proto2::Message::
-      /*auto msg = std::make_shared<api::v1::BlockRequest>();
-      msg->set_fields(19);
-      uint8_t s = 5;
-      msg->set_number(&s, 1);
-      msg->set_direction(api::v1::Direction::Descending);
-      msg->set_max_blocks(6);*/
-
-      //MessageReadWriterBigEndian
-      //auto rw = std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(std::make_shared<libp2p::basic::MessageReadWriterUvarint>(stream_p));
-      /*auto rw = std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(std::make_shared<libp2p::basic::MessageReadWriterUvarint>(stream_p));
-      rw->write(*msg, [stream_p{std::move(stream_p)}](libp2p::outcome::result<size_t> res) {
-        auto q = res.value();
-        std::cerr << "Written: " << q << std::endl;
-        //FAIL() << "Write res: " << res.error().message();
-        ASSERT_TRUE(res) << res.error().message();
-
-        stream_p->close([stream_p{std::move(stream_p)}] (auto res) {
-          ASSERT_TRUE(res) << res.error().message();
-          ASSERT_TRUE(stream_p->isClosedForWrite());
-          ASSERT_FALSE(stream_p->isClosedForRead());
-          //FAIL() << "Close res: " << res.error().message();
-
-          libp2p::basic::ProtobufMessageReadWriter::ReadCallbackFunc<api::v1::BlockResponse> f =
-              [](libp2p::outcome::result<api::v1::BlockResponse> res) {
-                auto q = res.value();
-                ASSERT_TRUE(res) << res.error().message();
-              };
-
-          auto rw = std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(stream_p);
-          rw->read(std::move(f));
-        });
-      });*/
-
-      //{8, 19, 26, 1, 5, 40, 1, 48, 1}
-      //{9, 8, 19, 26, 1, 5, 40, 1, 48, 1}
-      //libp2p::outcome::result<api::v1::BlockResponse> res) {
-
-
-      //identify::pb::Identify id;
-      //rw->write()
-
-/*      std::vector<uint8_t> read_buf{};
-      read_buf.resize(10);
-      stream_p->read(read_buf, 5, [read_buf, stream_p](auto &&read_res) {
-        FAIL() << "Read res: " << read_res.error().message();
-
-        ASSERT_TRUE(read_res) << read_res.error().message();
-        FAIL() << "!!!!!!!!!!!!!!!!!!!";
-      });*/
-
-      //strcpy((char*)&request_buf[0], "Hello!!!!!");
-      /*stream_p->write(
-          request_buf,
-          request_buf.size(),
-          [request_buf, stream_p](auto &&write_res) {
-            ASSERT_TRUE(write_res) << write_res.error().message();*/
-/*            std::vector<uint8_t> read_buf{};
-            read_buf.resize(10);
-            stream_p->read(read_buf, 10, [read_buf, stream_p](auto &&read_res) {
-              FAIL() << "Read res: " << read_res.error().message();
-
-              ASSERT_TRUE(read_res) << read_res.error().message();
-              FAIL() << common::Buffer(read_buf).toHex();
-            });*/
-
-      //ASSERT_TRUE(write_res) << write_res.error().message();
-      //ASSERT_EQ(request_buf.size(), write_res.value());
-      //});
     });
   });
 
   try {
-    //ping->start();
+    // ping->start();
     context->run();
   } catch (std::exception &e) {
     std::cout << e.what();
   }
 
-  int p =0; ++p;
+  int p = 0;
+  ++p;
 }
