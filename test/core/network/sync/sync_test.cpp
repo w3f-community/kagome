@@ -9,24 +9,58 @@
 
 #include <libp2p/injector/host_injector.hpp>
 #include <libp2p/protocol/identify.hpp>
+#include <libp2p/basic/message_read_writer_uvarint.hpp>
+
+#include "network/helpers/message_read_writer.hpp"
+#include "network/adapters/protobuf_block_request.hpp"
 #include "network/types/blocks_request.hpp"
 #include "network/types/gossip_message.hpp"
 #include "common/buffer.hpp"
 #include "scale/scale.hpp"
 
+#include "containers/objects_cache.hpp"
+
 using namespace kagome; //NOLINT
 
+struct Test1 {
+  Test1() {
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+  }
+  ~Test1() {
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+  }
+};
+
+KAGOME_DECLARE_CACHE(test,
+                     KAGOME_CACHE_UNIT(std::string),
+                     KAGOME_CACHE_UNIT(Test1),
+                     KAGOME_CACHE_UNIT(std::vector<int>)
+                     );
+KAGOME_DEFINE_CACHE(test);
+
 auto prepareBlockRequest() {
+  auto from = primitives::BlockHash::fromHex("11111111111111111111111111111111"
+                                             "22222222222222222222222222222222");
+
   network::BlocksRequest request;
   request.id = rand();
   request.fields = network::BlocksRequest::kBasicAttributes;
-  request.from = 5;
-  request.max = 5;
+  request.from = from.value();
+  request.max = 1;
   request.direction = network::Direction::ASCENDING;
   return request;
 }
 
 TEST(Syncing, SyncTest) {
+  {
+    auto ptr1 = KAGOME_EXTRACT_SHARED_CACHE(test, Test1);
+    { auto ptr2 = KAGOME_EXTRACT_SHARED_CACHE(test, Test1); }
+    auto ptr3 = KAGOME_EXTRACT_SHARED_CACHE(test, std::string);
+
+    auto ptr4 = KAGOME_EXTRACT_RAW_CACHE(test, Test1);
+    KAGOME_INSERT_RAW_CACHE(test, ptr4);
+  }
+
   auto injector = libp2p::injector::makeHostInjector();
   auto host = injector.create<std::shared_ptr<libp2p::Host>>();
 
@@ -126,34 +160,35 @@ TEST(Syncing, SyncTest) {
       }
       std::cerr << "Connected" << std::endl;
 
-/*      auto request = prepareBlockRequest();
-      network::GossipMessage message;
-      message.type = network::GossipMessage::Type::BLOCK_REQUEST;
-      //message.data = common::Buffer(scale::encode(request).value());
-      message.data = common::Buffer(scale::encode(request).value());
-      auto request_buf = scale::encode(message).value();*/
+      auto request = prepareBlockRequest();
+      std::vector<uint8_t> request_buf;
 
-      std::vector<uint8_t> request_buf = {
+      using ProtobufRW = network::MessageReadWriter<network::ProtobufMessageAdapter<network::BlocksRequest>, network::NoSink>;
+      auto it = ProtobufRW::write(request, request_buf);
+
+      gsl::span<uint8_t> data(it.base(),
+                              request_buf.size() - std::distance(request_buf.begin(), it));
+      assert(!data.empty());
+
+/*      std::vector<uint8_t> request_buf = {
           44, 8, 128, 128, 128, 152, 1, 18, 32, 52,
           189, 238, 44, 52, 228, 153, 78, 3, 11,
           253, 252, 168, 165, 91, 172, 110, 34,
           30, 172, 203, 223, 102, 173, 232, 127,
           77, 55, 193, 186, 63, 222, 40, 1, 48, 1
-      };
+      };*/
       auto stream_p = std::move(stream_res.value());
       ASSERT_FALSE(stream_p->isClosedForWrite());
 
-      stream_p->write(
+      auto rw = std::make_shared<libp2p::basic::MessageReadWriterUvarint>(stream_p);
+      rw->write(data, [](auto res) {
+
+      });
+
+/*      stream_p->write(
           request_buf,
           request_buf.size(),
           [request_buf, stream_p](auto &&write_res) {
-            /*std::vector<uint8_t> read_buf{};
-            read_buf.resize(10);
-            stream_p->read(read_buf, 10, [read_buf, stream_p](auto &&read_res) {
-              FAIL() << "Read res: " << read_res.error().message();
-              ASSERT_TRUE(read_res) << read_res.error().message();
-            });*/
-
             stream_p->close([stream_p{std::move(stream_p)}] (auto res) {
               std::vector<uint8_t> read_buf{};
               read_buf.resize(10);
@@ -162,7 +197,7 @@ TEST(Syncing, SyncTest) {
                 ASSERT_TRUE(read_res) << read_res.error().message();
               });
             });
-          });
+          });*/
 
       //proto2::Message::
       /*auto msg = std::make_shared<api::v1::BlockRequest>();
