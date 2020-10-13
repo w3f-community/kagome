@@ -19,7 +19,7 @@ target_link_libraries(uvar_adapter_test
         adapter_errors
         )
 
-addtest(message_read_writer_test
+addtest(kagome_message_read_writer_test
         message_read_writer_test.cpp
         )
 

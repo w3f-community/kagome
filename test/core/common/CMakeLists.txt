@@ -10,10 +10,10 @@ target_link_libraries(buffer_test
     buffer
     )
 
-addtest(hexutil_test
+addtest(kagome_hexutil_test
     hexutil_test.cpp
     )
-target_link_libraries(hexutil_test
+target_link_libraries(kagome_hexutil_test
     hexutil
     )
 
@@ -21,8 +21,8 @@ addtest(blob_test
     blob_test.cpp
     )
 target_link_libraries(blob_test
-  blob
-  )
+    blob
+    )
 
 addtest(mp_utils_test
     mp_utils_test.cpp

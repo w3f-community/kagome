@@ -97,6 +97,25 @@ endif()
 include(GNUInstallDirs)
 include(cmake/install.cmake)
 
+
+add_subdirectory(libs/libp2p)
+
+include_directories(
+   libs/libp2p/include
+)
+
+add_library(p2p::p2p ALIAS p2p)
+add_library(p2p::p2p_peer_id ALIAS p2p_peer_id)
+add_library(p2p::p2p_random_generator ALIAS p2p_random_generator)
+add_library(p2p::p2p_multiaddress ALIAS p2p_multiaddress)
+add_library(p2p::p2p_message_read_writer ALIAS p2p_message_read_writer)
+add_library(p2p::p2p_crypto_key ALIAS p2p_crypto_key)
+add_library(p2p::p2p_uvarint ALIAS p2p_uvarint)
+add_library(p2p::p2p_identify ALIAS p2p_identify)
+add_library(p2p::p2p_ping ALIAS p2p_ping)
+add_library(p2p::p2p_noise ALIAS p2p_noise)
+add_library(p2p::p2p_kademlia ALIAS p2p_kademlia)
+
 include_directories(
   # project includes
   ${PROJECT_SOURCE_DIR}/core

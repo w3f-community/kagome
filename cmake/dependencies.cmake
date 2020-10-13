@@ -62,9 +62,9 @@ find_package(tsl_hat_trie CONFIG REQUIRED)
 hunter_add_package(Boost.DI)
 find_package(Boost.DI CONFIG REQUIRED)
 
-# https://github.com/soramitsu/libp2p
-hunter_add_package(libp2p)
-find_package(libp2p CONFIG REQUIRED)
+## https://github.com/soramitsu/libp2p
+#hunter_add_package(libp2p)
+#find_package(libp2p CONFIG REQUIRED)
 
 hunter_add_package(libsecp256k1)
 find_package(libsecp256k1 CONFIG REQUIRED)

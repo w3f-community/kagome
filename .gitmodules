@@ -1,0 +1,4 @@
+[submodule "libs/libp2p"]
+	path = libs/libp2p
+	url = git@github.com:xDimon/cpp-libp2p.git
+	branch = feature/kademlia

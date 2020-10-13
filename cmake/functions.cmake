@@ -6,6 +6,10 @@ function(disable_clang_tidy target)
 endfunction()
 
 function(addtest test_name)
+  if (TARGET ${test_name})
+      message(WARNING "Attempt to add test with existed name: '${test_name}'. Will be used '${test_name}_DUP'")
+      set(test_name "${test_name}_DUP")
+  endif()
   add_executable(${test_name} ${ARGN})
   addtest_part(${test_name} ${ARGN})
   target_link_libraries(${test_name}
@@ -17,7 +21,7 @@ function(addtest test_name)
   add_test(
       NAME ${test_name}
       COMMAND $<TARGET_FILE:${test_name}> ${xml_output}
-  )
+      )
   set_target_properties(${test_name} PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin
       ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/test_lib
@@ -88,11 +92,13 @@ function(compile_proto_to_cpp PROTO_LIBRARY_NAME PB_H PB_CC PROTO)
   set(${PB_CC} ${SCHEMA_OUT_DIR}/${SCHEMA_REL}/${GEN_PB} PARENT_SCOPE)
 endfunction()
 
-add_custom_target(generated
-    COMMENT "Building generated files..."
-    )
+if(NOT TARGET generated)
+  add_custom_target(generated
+      COMMENT "Building generated files..."
+      )
+endif()
 
-function(add_proto_library NAME)
+function(add_proto_library__kagome NAME)
   set(SOURCES "")
   foreach (PROTO IN ITEMS ${ARGN})
     compile_proto_to_cpp(${NAME} H C ${PROTO})

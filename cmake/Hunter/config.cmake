@@ -5,11 +5,11 @@
 #    CMAKE_ARGS "CMAKE_VARIABLE=value"
 #)
 
-hunter_config(libp2p
-    URL https://github.com/soramitsu/cpp-libp2p/archive/517ca6e4a07db50a87767a3a75258ba3c58776b7.zip
-    SHA1 4c191fcb8e9000f663ee665b13c4a55370101470
-    CMAKE_ARGS TESTING=OFF
-    )
+#hunter_config(libp2p
+#    URL https://github.com/soramitsu/cpp-libp2p/archive/517ca6e4a07db50a87767a3a75258ba3c58776b7.zip
+#    SHA1 4c191fcb8e9000f663ee665b13c4a55370101470
+#    CMAKE_ARGS TESTING=OFF
+#    )
 
 # TODO (yuraz): PRE-451 remove it after collecting libsecp256k1 into hunter config
 hunter_config(libsecp256k1

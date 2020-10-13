@@ -9,5 +9,5 @@ include_directories(
     )
 
 add_subdirectory(core)
-add_subdirectory(deps)
+#add_subdirectory(deps)
 add_subdirectory(testutil)
