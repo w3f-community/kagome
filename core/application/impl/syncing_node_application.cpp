@@ -20,6 +20,7 @@ namespace kagome::application {
     io_context_ = injector_.create<sptr<boost::asio::io_context>>();
     config_storage_ = injector_.create<sptr<ConfigurationStorage>>();
     router_ = injector_.create<sptr<network::Router>>();
+    kad_ = injector_.create<std::shared_ptr<libp2p::protocol::kad::Kad>>();
 
     jrpc_api_service_ = injector_.create<sptr<api::ApiService>>();
   }
@@ -70,6 +71,10 @@ namespace kagome::application {
                 this->router_->handleGossipProtocol(stream_res.value());
               });
         }
+        for (const auto &boot_node : config_storage_->getBootNodes().peers) {
+          kad_->addPeer(boot_node, true);
+        }
+        kad_->start(true);
         this->router_->init();
       });
       return true;

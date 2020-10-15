@@ -64,6 +64,8 @@ target_link_libraries(application_injector
     authority_manager
     system_api_service
     rpc_api_service
+    p2p::p2p_kad
+    kademlia_value_storage
     )
 
 add_library(syncing_node_injector
