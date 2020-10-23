@@ -97,8 +97,8 @@ class StateJrpcProcessorTest : public testing::Test {
         }));
     EXPECT_CALL(*server, registerHandler("state_getMetadata", _))
         .WillOnce(testing::Invoke([&](auto &name, auto &&f) {
-          call_contexts_.emplace(std::make_pair(
-              CallType::kCallType_GetMetadata, CallContext{.handler = f}));
+          call_contexts_.emplace(std::make_pair(CallType::kCallType_GetMetadata,
+                                                CallContext{.handler = f}));
         }));
     processor.registerHandlers();
   }
@@ -129,7 +129,7 @@ TEST_F(StateJrpcProcessorTest, ProcessRequest) {
   jsonrpc::Request::Parameters params{"0x01234567"};
   auto result_hex = execute(CallType::kCallType_GetStorage, params).AsString();
   EXPECT_OUTCOME_TRUE(result_vec, kagome::common::unhexWith0x(result_hex));
-  ASSERT_EQ(expected_result.toVector(), result_vec);
+  ASSERT_EQ(expected_result.asVector(), result_vec);
 }
 
 /**
@@ -149,7 +149,7 @@ TEST_F(StateJrpcProcessorTest, ProcessAnotherRequest) {
                                       "0x" + ("010203"_hash256).toHex()};
   auto result_hex = execute(CallType::kCallType_GetStorage, params).AsString();
   EXPECT_OUTCOME_TRUE(result_vec, kagome::common::unhexWith0x(result_hex));
-  ASSERT_EQ(expected_result.toVector(), result_vec);
+  ASSERT_EQ(expected_result.asVector(), result_vec);
 }
 
 /**
