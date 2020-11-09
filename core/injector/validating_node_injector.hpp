@@ -6,7 +6,7 @@
 #ifndef KAGOME_CORE_INJECTOR_VALIDATING_NODE_INJECTOR_HPP
 #define KAGOME_CORE_INJECTOR_VALIDATING_NODE_INJECTOR_HPP
 
-#include "application/app_config.hpp"
+#include "application/app_configuration.hpp"
 #include "application/impl/local_key_storage.hpp"
 #include "consensus/babe/impl/babe_impl.hpp"
 #include "consensus/grandpa/chain.hpp"
@@ -111,9 +111,11 @@ namespace kagome::injector {
     }
     application::AppConfiguration const &config =
         injector.template create<application::AppConfiguration const &>();
+    application::GenesisConfig const &genesis_config =
+        injector.template create<application::GenesisConfig const &>();
 
     auto &&result =
-        application::LocalKeyStorage::create(std::string(config.keystore_path()));
+        application::LocalKeyStorage::create(config.keystore_path(genesis_config.id()));
     if (!result) {
       common::raise(result.error());
     }
@@ -149,15 +151,12 @@ namespace kagome::injector {
   }
 
   template <typename... Ts>
-  auto makeFullNodeInjector(const application::AppConfigPtr &app_config,
+  auto makeFullNodeInjector(const application::AppConfiguration &app_config,
                             Ts &&... args) {
     using namespace boost;  // NOLINT;
 
     return di::make_injector(
-        makeApplicationInjector(app_config->genesis_path(),
-                                app_config->leveldb_path(),
-                                app_config->rpc_http_endpoint(),
-                                app_config->rpc_ws_endpoint()),
+        makeApplicationInjector(app_config),
         // bind sr25519 keypair
         di::bind<crypto::Sr25519Keypair>.to(
             [](auto const &inj) { return get_sr25519_keypair(inj); }),

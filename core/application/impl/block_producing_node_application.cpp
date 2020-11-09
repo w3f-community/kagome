@@ -8,17 +8,17 @@
 namespace kagome::application {
 
   BlockProducingNodeApplication::BlockProducingNodeApplication(
-      const AppConfigPtr &app_config)
+      const AppConfiguration &app_config)
       : injector_{injector::makeBlockProducingNodeInjector(app_config)},
         logger_(common::createLogger("Application")) {
-    spdlog::set_level(app_config->verbosity());
+    spdlog::set_level(app_config.verbosity());
 
     // keep important instances, the must exist when injector destroyed
     // some of them are requested by reference and hence not copied
     app_state_manager_ = injector_.create<std::shared_ptr<AppStateManager>>();
 
     io_context_ = injector_.create<sptr<boost::asio::io_context>>();
-    config_storage_ = injector_.create<sptr<ConfigurationStorage>>();
+    genesis_config_ = injector_.create<sptr<GenesisConfig>>();
     key_storage_ = injector_.create<sptr<KeyStorage>>();
     clock_ = injector_.create<sptr<clock::SystemClock>>();
     babe_ = injector_.create<sptr<Babe>>();
