@@ -43,8 +43,8 @@ namespace kagome::injector {
         })[boost::di::override],
         // peer info
         di::bind<network::OwnPeerInfo>.to(
-            [p2p_port{app_config->p2p_port()}](const auto &injector) {
-              return get_peer_info(injector, p2p_port);
+            [](const auto &injector) {
+              return get_peer_info(injector);
             }),
 
         di::bind<consensus::Babe>.to(
@@ -55,14 +55,14 @@ namespace kagome::injector {
 
         di::bind<consensus::grandpa::GrandpaObserver>.template to<consensus::grandpa::SyncingGrandpaObserver>(),
         di::bind<application::KeyStorage>.to(
-            [app_config](const auto &injector) {
-              return get_key_storage(app_config->keystore_path(), injector);
+            [](const auto &injector) {
+              return get_key_storage(injector);
             }),
         di::bind<runtime::GrandpaApi>.template to<runtime::dummy::GrandpaApiDummy>()
             [boost::di::override],
         di::bind<crypto::CryptoStore>.template to(
-            [app_config](const auto &injector) {
-              return get_crypto_store(app_config->keystore_path(), injector);
+            [](const auto &injector) {
+              return get_crypto_store(injector);
             })[boost::di::override],
         // user-defined overrides...
         std::forward<decltype(args)>(args)...);

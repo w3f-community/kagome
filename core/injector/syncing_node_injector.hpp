@@ -64,8 +64,8 @@ namespace kagome::injector {
 
         // peer info
         di::bind<network::OwnPeerInfo>.to(
-            [p2p_port{app_config->p2p_port()}](const auto &injector) {
-              return get_peer_info(injector, p2p_port);
+            [](const auto &injector) {
+              return get_peer_info(injector);
             }),
 
         di::bind<consensus::Babe>.template to<consensus::SyncingBabe>(),
